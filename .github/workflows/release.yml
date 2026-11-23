@@ -1,0 +1,144 @@
+name: Tagged release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  portable:
+    uses: ./.github/workflows/portable.yml
+
+  security:
+    uses: ./.github/workflows/dependency-security.yml
+
+  package:
+    name: ${{ matrix.system }} package
+    runs-on: ${{ matrix.system }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        system: [ubuntu-24.04, macos-15]
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_RELEASE_DEBUG: "0"
+      CARGO_PROFILE_RELEASE_STRIP: debuginfo
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+
+      - name: Verify that the tag names the package version
+        shell: bash
+        run: |
+          version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)"
+          test -n "$version"
+          test "$GITHUB_REF_NAME" = "v$version"
+
+      - name: Generate source-distribution notices and inventory
+        run: |
+          cargo fetch --locked
+          python3 tools/generate_distribution_evidence.py --output-root "$RUNNER_TEMP/gazette-distribution"
+          python3 tools/generate_distribution_evidence.py --check --output-root "$RUNNER_TEMP/gazette-distribution"
+
+      - name: Install the exact auditable-build carrier
+        run: cargo install cargo-auditable --version 0.7.5 --locked --root "$RUNNER_TEMP/cargo-auditable"
+
+      - name: Build the auditable standalone binary
+        shell: bash
+        run: |
+          export PATH="$RUNNER_TEMP/cargo-auditable/bin:$PATH"
+          export CARGO_ENCODED_RUSTFLAGS="$(printf '%s\037%s' \
+            "--remap-path-prefix=$HOME=/build-home" \
+            "--remap-path-prefix=$GITHUB_WORKSPACE=gazette")"
+          cargo auditable build --release --locked --bin gazette
+
+      - name: Reject build-machine paths in the release binary
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import os
+          from pathlib import Path
+
+          binary = Path("target/release/gazette").read_bytes()
+          for name in ("HOME", "GITHUB_WORKSPACE"):
+              prefix = os.environ[name].encode()
+              if not prefix or prefix in binary:
+                  raise SystemExit(f"Release binary retains the {name} build path")
+          print("Release binary contains neither build-machine prefix")
+          PYCODE
+
+      - name: Assemble the portable release tree
+        shell: bash
+        run: |
+          target_triple="$(rustc -vV | sed -n 's/^host: //p')"
+          test -n "$target_triple"
+          package="$RUNNER_TEMP/gazette-$target_triple"
+          mkdir -p "$package/sdk/js"
+          cp target/release/gazette "$package/gazette"
+          cp -R docs "$package/docs"
+          cp -R sdk/js/search "$package/sdk/js/search"
+          cp -R sdk/js/analytics "$package/sdk/js/analytics"
+          cp -R sdk/js/webmcp "$package/sdk/js/webmcp"
+          cp README.md LICENSE "$package/"
+          cp "$RUNNER_TEMP/gazette-distribution/"* "$package/"
+          mkdir -p dist
+          tar -czf "dist/gazette-$target_triple.tar.gz" -C "$package" .
+          printf '%s' "$target_triple" > dist/target-triple
+
+      - name: Generate the binary SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          file: target/release/gazette
+          format: spdx-json
+          output-file: dist/gazette-${{ runner.os }}-${{ runner.arch }}.sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Bind every release asset by checksum
+        shell: bash
+        run: |
+          target_triple="$(cat dist/target-triple)"
+          mv "dist/gazette-${{ runner.os }}-${{ runner.arch }}.sbom.spdx.json" \
+            "dist/gazette-$target_triple.sbom.spdx.json"
+          shasum -a 256 \
+            "dist/gazette-$target_triple.tar.gz" \
+            "dist/gazette-$target_triple.sbom.spdx.json" \
+            > "dist/gazette-$target_triple.sha256"
+          rm dist/target-triple
+
+      - name: Retain the complete platform package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: gazette-${{ runner.os }}-${{ runner.arch }}
+          path: dist/gazette-*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish tagged assets
+    needs: [package, portable, security]
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download every platform package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: gazette-*
+          path: release
+          merge-multiple: true
+
+      - name: Create the immutable tag release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --title "Gazette $GITHUB_REF_NAME"

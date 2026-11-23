@@ -1,0 +1,21 @@
+Gazette
+Copyright © 2026 RawThoughts Enterprises Private Limited.
+Author and originator: Harsh Joshi.
+
+This repository declares Gazette 0.1.0 under
+AGPL-3.0-or-later in its root package manifest. See LICENSE for the complete
+licence text.
+
+The browser modules under sdk/js/search/, sdk/js/analytics/ and sdk/js/webmcp/
+are licensed under Apache-2.0 instead; each carries its own LICENSE and NOTICE.
+
+Third-party source dependencies, retained assets and native components preserve
+their own licences, notices and ownership. Their generated human-readable
+inventory is THIRD_PARTY_NOTICES.md; its machine-readable counterpart is
+SBOM.spdx.json. Each release archive carries both beside this file, generated
+from the locked inputs at the release; the release also attaches a separate
+binary SBOM.
+
+These files are deterministic mechanical source evidence. They do not establish
+legal approval, binary contents, trademark clearance, publication permission,
+release authorization or alternative licence terms.

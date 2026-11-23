@@ -1,0 +1,82 @@
+{
+  "approved_at": 100,
+  "coordinator_id": "coordinator:test",
+  "disclosure_evidence_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "expires_at": 200,
+  "generic_rule_set_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "journal_epoch": 1,
+  "journal_id": [
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7,
+    7
+  ],
+  "nonce": "nonce:é😀",
+  "not_before": 110,
+  "ordered_targets": [
+    {
+      "branch": "main",
+      "domain": "0.example",
+      "expected_remote_oid_or_unborn": {
+        "state": "unborn"
+      },
+      "local_commit_oid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "ordinal": 0,
+      "output_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+      "prepared_release_receipt_ref": "1111111111111111111111111111111111111111111111111111111111111111",
+      "refspec": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:refs/heads/main",
+      "remote": "https://example.invalid/site-0.git"
+    }
+  ],
+  "policy_evidence_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "publisher_authorizations": [
+    {
+      "authority_reference": "1111111111111111111111111111111111111111111111111111111111111111",
+      "authorized_target_ordinals": [
+        0
+      ],
+      "publisher_id": "publisher:one",
+      "publisher_key_epoch": 1,
+      "publisher_key_id": "key:one",
+      "signature_envelope": {
+        "schema_id": "gazette.ed25519/v1",
+        "signature": "/AX4vbQbh/cWwnw/XA2PcwLw5W3xdW0uZnGn5A9alX8/OH54Ief9Cb2dL51xem6GY9Wz5rXYETu+D4nRKT/kAg=="
+      }
+    }
+  ],
+  "record_id": "record:test",
+  "scanner_revision": "scanner:test",
+  "schema_id": "WebsiteReleaseBatchAuthorizationV1",
+  "validation_evidence_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "website_policy_projection_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+  "writer_fence": 9,
+  "canonical_body_sha256": "2fcc02ab3b16e87f4338fd77c70c8ff35aa245563515f631518c08337c52fe81"
+}

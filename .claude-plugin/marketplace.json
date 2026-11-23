@@ -1,0 +1,15 @@
+{
+  "name": "gazette-local",
+  "metadata": {
+    "description": "Gazette's local agent integration from this source checkout."
+  },
+  "owner": { "name": "RawThoughts Enterprises Private Limited" },
+  "plugins": [
+    {
+      "name": "gazette",
+      "source": "./integrations/agents",
+      "description": "Check and work on Gazette publications with a local agent.",
+      "category": "productivity"
+    }
+  ]
+}

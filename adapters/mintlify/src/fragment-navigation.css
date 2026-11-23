@@ -1,0 +1,6 @@
+/* Empty source and title aliases use the pinned provider's native heading
+   clearance. Mintlify updates --scroll-mt when its visible navigation changes. */
+#content a[id]:not([href]),
+#content a[name]:not([href]) {
+  scroll-margin-top: calc(var(--scroll-mt) + var(--gazette-title-fragment-offset, 0px));
+}

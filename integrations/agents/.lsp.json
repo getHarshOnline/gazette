@@ -1,0 +1,18 @@
+{
+  "gazette": {
+    "command": "gazette",
+    "args": ["lsp"],
+    "extensionToLanguage": {
+      ".md": "markdown",
+      ".toml": "toml",
+      ".ipynb": "json"
+    },
+    "initializationOptions": {
+      "native_selection": {
+        "allow_read": true,
+        "discover": true,
+        "workspace": "gazette.toml"
+      }
+    }
+  }
+}

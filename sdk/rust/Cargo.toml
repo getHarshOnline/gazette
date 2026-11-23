@@ -1,0 +1,296 @@
+[package]
+name = "gazette-sdk"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Gazette's public Rust API over its shared application behavior."
+
+[lints]
+workspace = true
+
+[features]
+default = []
+# Pure selected-buffer inspection and editor analysis. The Markdown adapter owns
+# syntax mechanics; inward documentation contracts own route/link projection.
+authoring = ["dep:gazette-adapter-markdown"]
+# Confined, caller-selected configuration and source capture. This intentionally
+# excludes build, deployment, registry and publication-effect adapters.
+native-configuration = ["dep:gazette-adapter-fs", "dep:gazette-adapter-git"]
+# Complete local application composition for CLI, MCP and the broad Node SDK.
+# Enabling it selects implementations; it grants no native permission or effect.
+native-local = [
+    "authoring",
+    "native-configuration",
+    "dep:gazette-adapter-http",
+    "dep:gazette-adapter-process",
+    "dep:gazette-adapter-authority",
+    "dep:gazette-adapter-sqlite",
+    "dep:gazette-adapter-tera",
+    "dep:gazette-adapter-javascript",
+    "dep:gazette-adapter-styles",
+    "dep:gazette-adapter-raster",
+    "dep:gazette-adapter-vector",
+    "dep:gazette-adapter-fonts",
+    "dep:gazette-adapter-mintlify",
+    "dep:gazette-adapter-documentation",
+    "dep:gazette-integration-github",
+]
+
+[dependencies]
+gazette-core.workspace = true
+gazette-ports.workspace = true
+gazette-application.workspace = true
+gazette-compiler.workspace = true
+gazette-adapter-fs = { workspace = true, optional = true }
+gazette-adapter-http = { workspace = true, optional = true }
+gazette-adapter-process = { workspace = true, optional = true }
+gazette-adapter-authority = { workspace = true, optional = true }
+gazette-adapter-git = { workspace = true, optional = true }
+gazette-adapter-sqlite = { workspace = true, optional = true }
+gazette-adapter-tera = { workspace = true, optional = true }
+gazette-adapter-javascript = { workspace = true, optional = true }
+gazette-adapter-styles = { workspace = true, optional = true }
+gazette-adapter-raster = { workspace = true, optional = true }
+gazette-adapter-vector = { workspace = true, optional = true }
+gazette-adapter-fonts = { workspace = true, optional = true }
+gazette-adapter-markdown = { workspace = true, optional = true }
+gazette-adapter-mintlify = { workspace = true, optional = true }
+gazette-adapter-documentation = { workspace = true, optional = true }
+gazette-integration-github = { workspace = true, optional = true }
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+
+[dev-dependencies]
+rtepl-repository = { git = "https://github.com/getHarshOnline/rtepl-common.git", rev = "13060ae859f5820efd5641d5145563c8a0e1452e" }
+gazette-test-support.workspace = true
+git2.workspace = true
+jsonschema.workspace = true
+tempfile.workspace = true
+syn = { version = "=2.0.119", features = ["full", "visit"] }
+
+[[test]]
+name = "documentation_materialization"
+required-features = ["native-local"]
+
+# Keep portable tests auto-discovered; capability-dependent targets must select
+# the same feature boundary as the public APIs they exercise.
+[[test]]
+name = "authoring"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_completion"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_component_assistance"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_diagnostics"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_distributed"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_document_navigation"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_heading_completion"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_heading_navigation"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_legal_diagnostics"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_manuals"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_navigation"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_origins"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_page_packages"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_session"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_symbols"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_unresolved_completion"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_workspace_assistance"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_workspace_navigation"
+required-features = ["authoring"]
+
+[[test]]
+name = "authoring_resource_inputs"
+required-features = ["authoring"]
+
+[[test]]
+name = "markdown_inspection"
+required-features = ["authoring"]
+
+[[test]]
+name = "workspace_capture"
+required-features = ["authoring", "native-configuration"]
+
+[[test]]
+name = "configuration"
+required-features = ["native-configuration"]
+
+[[test]]
+name = "main"
+required-features = ["native-configuration"]
+
+[[test]]
+name = "authored_projection"
+required-features = ["native-local"]
+
+[[test]]
+name = "candidate_policy_recipe"
+required-features = ["native-local"]
+
+[[test]]
+name = "content_projection"
+required-features = ["native-local"]
+
+[[test]]
+name = "development_sources"
+required-features = ["native-local"]
+
+[[test]]
+name = "disclosure_input"
+required-features = ["native-local"]
+
+[[test]]
+name = "documentation_check"
+required-features = ["native-local"]
+
+[[test]]
+name = "documentation_generation"
+required-features = ["native-local"]
+
+[[test]]
+name = "documentation_output"
+required-features = ["native-local"]
+
+[[test]]
+name = "documentation_swagger"
+required-features = ["native-local"]
+
+[[test]]
+name = "github"
+required-features = ["native-local"]
+
+[[test]]
+name = "journal_worktree_failure"
+required-features = ["native-local"]
+
+[[test]]
+name = "local_coordinator"
+required-features = ["native-local"]
+
+[[test]]
+name = "local_publication_recipe"
+required-features = ["native-local"]
+
+[[test]]
+name = "markdown_input"
+required-features = ["native-local"]
+
+[[test]]
+name = "observation_session"
+required-features = ["native-local"]
+
+[[test]]
+name = "page_package_source_safety"
+required-features = ["native-local"]
+
+[[test]]
+name = "preview"
+required-features = ["native-local"]
+
+[[test]]
+name = "project_projection"
+required-features = ["native-local"]
+
+[[test]]
+name = "public_surface"
+required-features = ["native-local"]
+
+[[test]]
+name = "publication_recipe"
+required-features = ["native-local"]
+
+[[test]]
+name = "recovery_session"
+required-features = ["native-local"]
+
+[[test]]
+name = "release_checkpoint"
+required-features = ["native-local"]
+
+[[test]]
+name = "release_commit_output"
+required-features = ["native-local"]
+
+[[test]]
+name = "release_session"
+required-features = ["native-local"]
+
+[[test]]
+name = "resource_cache"
+required-features = ["native-local"]
+
+[[test]]
+name = "review_recipes"
+required-features = ["native-local"]
+
+[[test]]
+name = "source_input"
+required-features = ["native-local"]
+
+[[test]]
+name = "store_output"
+required-features = ["native-local"]
+
+[[test]]
+name = "theme_working_sources"
+required-features = ["native-local"]
+
+[[bench]]
+name = "source_pipeline"
+harness = false
+required-features = ["native-local"]
+
+[[bench]]
+name = "publication_pipeline"
+harness = false
+required-features = ["native-local"]

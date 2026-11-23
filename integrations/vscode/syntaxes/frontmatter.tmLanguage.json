@@ -1,0 +1,26 @@
+{
+  "scopeName": "markdown.gazette.frontmatter",
+  "injectionSelector": "L:text.html.markdown - meta.embedded",
+  "patterns": [
+    {
+      "name": "meta.embedded.block.toml.frontmatter.gazette",
+      "begin": "\\A\\+\\+\\+[ \\t]*\\r?$",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.metadata.begin.gazette"
+        }
+      },
+      "end": "^\\+\\+\\+[ \\t]*\\r?$",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.metadata.end.gazette"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.gazette.toml"
+        }
+      ]
+    }
+  ]
+}

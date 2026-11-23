@@ -1,0 +1,21 @@
+[package]
+name = "gazette-adapter-javascript"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Compiles a Theme's browser JavaScript modules with the pinned SWC toolchain."
+
+[lints]
+workspace = true
+
+[dependencies]
+gazette-core.workspace = true
+gazette-ports.workspace = true
+swc_core.workspace = true
+anyhow.workspace = true
+oxc_allocator.workspace = true
+oxc_parser.workspace = true
+oxc_semantic.workspace = true
+oxc_span.workspace = true

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gazette": {
+      "command": "gazette",
+      "args": ["mcp"]
+    }
+  }
+}

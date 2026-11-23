@@ -1,0 +1,476 @@
+{
+  "name": "gazette-vscode",
+  "displayName": "Gazette",
+  "description": "Check Gazette publication pages and configuration while you write.",
+  "version": "0.1.9",
+  "publisher": "rtepl",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "main": "./bundle/extension.js",
+  "files": [
+    "bundle/**",
+    "README.md",
+    "CHANGELOG.md",
+    "media/**",
+    "LICENSE*",
+    "syntaxes/**",
+    "language-configuration.json",
+    "server/**"
+  ],
+  "activationEvents": [
+    "workspaceContains:gazette.toml",
+    "onCommand:gazette.application.prepare-release-commit",
+    "onCommand:gazette.application.verify-release-commit",
+    "onCommand:gazette.application.checkpoint-release-commit",
+    "onCommand:gazette.application.inspect-release-checkpoint",
+    "onCommand:gazette.application.inspect-journal-worktree",
+    "onCommand:gazette.application.recover-journal-worktree",
+    "onCommand:gazette.application.retain-release-commit",
+    "onCommand:gazette.application.inspect-release-custody",
+    "onCommand:gazette.application.verify-release-authorization",
+    "onCommand:gazette.application.inspect-release-preparations",
+    "onCommand:gazette.application.verify-prepared-authorization",
+    "onCommand:gazette.application.observe-release-targets",
+    "onCommand:gazette.application.observe-github-pages-build",
+    "onCommand:gazette.application.observe-delivery",
+    "onCommand:gazette.application.record-release-observation",
+    "onCommand:gazette.application.inspect-release-observation",
+    "onCommand:gazette.application.inspect-release-authorization",
+    "onCommand:gazette.application.inspect-release-leases",
+    "onCommand:gazette.application.inspect-release-consumption",
+    "onCommand:gazette.application.inspect-release-attempts",
+    "onCommand:gazette.application.inspect-release-reconciliations",
+    "onCommand:gazette.application.enroll-local-coordinator",
+    "onCommand:gazette.application.inspect-local-coordinator",
+    "onCommand:gazette.application.adopt-store-restore",
+    "onCommand:gazette.application.reconcile-registry",
+    "onCommand:gazette.application.inspect-registry",
+    "onCommand:gazette.application.inspect-materialization",
+    "onCommand:gazette.application.schema",
+    "onCommand:gazette.application.assemble-docs",
+    "onCommand:gazette.application.check",
+    "onCommand:gazette.application.render-site",
+    "onCommand:gazette.application.probe-output",
+    "onCommand:gazette.application.render-sites",
+    "onCommand:gazette.application.import-editor-context",
+    "onCommand:gazette.application.materialize-sites",
+    "onCommand:gazette.application.materialize-docs",
+    "onCommand:gazette.application.qualify-sites",
+    "onCommand:gazette.application.prepare-sites",
+    "onCommand:gazette.application.preview-sites",
+    "onCommand:gazette.application.production-preview",
+    "onCommand:gazette.application.check-stage",
+    "onCommand:gazette.application.stage",
+    "onCommand:gazette.application.verify-generated-tree",
+    "onCommand:gazette.application.acquire-writer",
+    "onCommand:gazette.application.release-session",
+    "onCommand:gazette.application.recovery-session",
+    "onCommand:gazette.application.inspect-journal",
+    "onCommand:gazette.application.initialize-store",
+    "onCommand:gazette.application.connect-store",
+    "onCommand:gazette.application.verify-backup",
+    "onCommand:gazette.application.prepare-store-restore",
+    "onCommand:gazette.application.backup-store",
+    "onCommand:gazette.application.inspect-store",
+    "onCommand:gazette.application.inspect-toml",
+    "onCommand:gazette.application.inspect-markdown",
+    "onCommand:gazette.application.inspect-source"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Gazette launches its bundled program or the native executable selected in User settings."
+    },
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "Gazette requires a native executable and local file buffers."
+    }
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "gazette",
+        "aliases": [
+          "Gazette Workspace TOML"
+        ],
+        "filenames": [
+          "gazette.toml"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "gazette.runCommand",
+        "title": "Gazette: Run Command…"
+      },
+      {
+        "command": "gazette.checkSite",
+        "title": "Gazette: Check Saved Site"
+      },
+      {
+        "command": "gazette.restartLanguageServer",
+        "title": "Gazette: Restart Server"
+      },
+      {
+        "command": "gazette.createOperationRequest",
+        "title": "Gazette: Create Operation Request"
+      },
+      {
+        "command": "gazette.executeOperationRequest",
+        "title": "Gazette: Execute Operation Request"
+      },
+      {
+        "command": "gazette.showApplicationTools",
+        "title": "Gazette: Show Application Tools"
+      },
+      {
+        "command": "gazette.showApplicationResult",
+        "title": "Gazette: Show Application Result"
+      },
+      {
+        "command": "gazette.openBuildInput",
+        "title": "Gazette: Open Build Input"
+      },
+      {
+        "command": "gazette.stopApplicationSession",
+        "title": "Gazette: Stop Application Session"
+      },
+      {
+        "command": "gazette.showAuthoringContext",
+        "title": "Gazette: Page Details"
+      },
+      {
+        "command": "gazette.inspectEditorWithMcp",
+        "title": "Gazette: Inspect Current Editor with MCP"
+      },
+      {
+        "command": "gazette.revealAuthoringField",
+        "title": "Gazette: Go to Authoring Field"
+      },
+      {
+        "command": "gazette.exportEditorContext",
+        "title": "Gazette: Export Current Editor Context"
+      },
+      {
+        "command": "gazette.revealRetainedSource",
+        "title": "Gazette: Open Retained Source"
+      }
+    ],
+    "configuration": {
+      "title": "Gazette",
+      "properties": {
+        "gazette.authoring.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Check writing and offer editor help in this folder. Turn this off when another Gazette folder already includes these files. You can still run commands here."
+        },
+        "gazette.server.path": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "restricted": true,
+          "description": "Optional full path to another Gazette program on this computer or remote host. Leave empty to use the bundled program. Set overrides in User settings; a project cannot choose the program to run."
+        },
+        "gazette.workspace.configuration": {
+          "type": "string",
+          "default": "gazette.toml",
+          "scope": "resource",
+          "description": "Workspace configuration file, relative to this folder. Folders without it stay inactive in discovery mode."
+        },
+        "gazette.workspace.configurationDocuments": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "For a fixed file list, name every included TOML file relative to this folder. Leave empty with automatic discovery."
+        },
+        "gazette.workspace.roots": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "uri"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Name used to refer to this source folder. The name workspace already refers to the configuration folder."
+              },
+              "uri": {
+                "type": "string",
+                "minLength": 1,
+                "description": "File URI of a folder opened in this VS Code workspace. Select the files to read separately."
+              }
+            }
+          },
+          "description": "For a fixed file list, name the other open folders containing publication sources. Automatic discovery uses Gazette configuration instead."
+        },
+        "gazette.workspace.documents": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "root",
+                  "file",
+                  "path"
+                ],
+                "properties": {
+                  "root": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "file": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          },
+          "description": "For a fixed file list, choose pages by relative path or by source folder name, file path and Gazette path. Leave empty with automatic discovery."
+        },
+        "gazette.workspace.manuals": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "file"
+            ],
+            "properties": {
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "file": {
+                "type": "string",
+                "minLength": 1
+              },
+              "root": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "description": "For a fixed file list, choose developer manuals by source ID and file path. Automatic discovery uses configured navigation and optional manual support files."
+        },
+        "gazette.workspace.pagePackageInputs": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "root",
+                  "file",
+                  "path"
+                ],
+                "properties": {
+                  "root": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "file": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          },
+          "description": "For a fixed file list, choose supporting page files such as images. Gazette reads their saved contents; automatic discovery observes their paths and sizes instead."
+        },
+        "gazette.workspace.packageBaselines": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "package",
+              "file"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "theme",
+                  "plugin"
+                ],
+                "description": "Whether this package is a theme or plugin."
+              },
+              "package": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Package ID expected in the selected manifest."
+              },
+              "file": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Package manifest file, relative to its source folder."
+              },
+              "root": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "description": "For a fixed file list, name theme and plugin manifest files and their package IDs. Automatic discovery uses the exact manifests declared in Gazette configuration."
+        },
+        "gazette.workspace.discovery": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Discover authoring files from Gazette configuration when no explicit source lists are supplied. Folders without the selected configuration stay inactive."
+        },
+        "gazette.workspace.manualSupport": {
+          "type": "array",
+          "default": [],
+          "scope": "resource",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "path"
+            ],
+            "properties": {
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "description": "Additional manual files outside configured navigation. Each path is relative to its configured Gazette source. Used with automatic discovery."
+        }
+      }
+    },
+    "grammars": [
+      {
+        "language": "gazette",
+        "scopeName": "source.gazette.toml",
+        "path": "./syntaxes/gazette.tmLanguage.json"
+      },
+      {
+        "scopeName": "markdown.gazette.frontmatter",
+        "path": "./syntaxes/frontmatter.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown"
+        ]
+      }
+    ],
+    "configurationDefaults": {
+      "[gazette]": {
+        "editor.quickSuggestions": {
+          "other": true,
+          "comments": false,
+          "strings": true
+        },
+        "editor.suggest.showWords": false
+      }
+    },
+    "views": {
+      "explorer": [
+        {
+          "id": "gazette.authoringContext",
+          "name": "Gazette Authoring",
+          "when": "isWorkspaceTrusted"
+        }
+      ]
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "gazette.showAuthoringContext",
+          "when": "gazette.activeSource",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "vscode-languageclient": "9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.17.0",
+    "@types/vscode": "1.96.0",
+    "esbuild": "0.28.2",
+    "typescript": "5.9.2"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc -p tsconfig.json && node tools/bundle.cjs",
+    "test": "npm run build && node --test tests/*.test.cjs",
+    "test:live-catalog": "npm run build && node tests/initializedCatalog.cjs && node tests/catalogCoverage.cjs",
+    "check": "npm run typecheck && npm test",
+    "vscode:prepublish": "npm run build",
+    "package": "node tools/package.cjs"
+  }
+}

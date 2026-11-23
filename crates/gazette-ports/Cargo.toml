@@ -1,0 +1,15 @@
+[package]
+name = "gazette-ports"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "The capabilities Gazette's operations ask the outside world for, such as reading sources and writing output."
+
+[lints]
+workspace = true
+
+[dependencies]
+gazette-core.workspace = true
+serde_json.workspace = true

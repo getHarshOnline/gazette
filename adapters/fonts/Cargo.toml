@@ -1,0 +1,20 @@
+[package]
+name = "gazette-adapter-fonts"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Checks and delivers retained WOFF2 fonts within set limits."
+
+[lints]
+workspace = true
+
+[dependencies]
+gazette-core.workspace = true
+gazette-ports.workspace = true
+read-fonts.workspace = true
+wuff.workspace = true
+
+[dev-dependencies]
+base64.workspace = true

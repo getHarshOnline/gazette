@@ -1,0 +1,42 @@
+[package]
+name = "gazette-compiler"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Turns authored content and workspace configuration into the resolved publication model, with no file or network access."
+
+[lints]
+workspace = true
+
+[dependencies]
+gazette-core.workspace = true
+gazette-ports.workspace = true
+html5ever.workspace = true
+cssparser.workspace = true
+cssparser-color.workspace = true
+quick-xml.workspace = true
+xml.workspace = true
+oxc_allocator.workspace = true
+oxc_ast.workspace = true
+oxc_parser.workspace = true
+oxc_semantic.workspace = true
+oxc_span.workspace = true
+percent-encoding.workspace = true
+serde.workspace = true
+schemars.workspace = true
+serde_json.workspace = true
+serde_jcs.workspace = true
+ed25519-dalek.workspace = true
+base64.workspace = true
+jsonschema.workspace = true
+slug.workspace = true
+toml_edit.workspace = true
+toml_parser.workspace = true
+yaml-rust2.workspace = true
+url.workspace = true
+unicode-normalization.workspace = true
+
+[dev-dependencies]
+gazette-adapter-markdown.workspace = true

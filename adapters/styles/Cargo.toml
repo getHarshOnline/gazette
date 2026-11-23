@@ -1,0 +1,22 @@
+[package]
+name = "gazette-adapter-styles"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Compiles a Theme's Sass to CSS and checks the CSS it depends on."
+
+[package.metadata.gazette]
+source-inputs = ["vendor/grass_compiler-0.13.4"]
+
+[lints]
+workspace = true
+
+[dependencies]
+gazette-core.workspace = true
+gazette-ports.workspace = true
+grass.workspace = true
+grass_compiler.workspace = true
+lightningcss.workspace = true
+cssparser.workspace = true

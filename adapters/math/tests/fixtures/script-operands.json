@@ -1,0 +1,66 @@
+{
+  "formulas": [
+    {
+      "tex": "L_{\\log}(p,y)=-y\\log p-(1-y)\\log(1-p).",
+      "display": false
+    },
+    {
+      "tex": "\\eta(S)=\\operatorname{clamp}\\!\\left(\\eta_{\\mathrm{base}}[1+\\alpha\\tanh(\\beta S)],\\eta_{\\min},\\eta_{\\max}\\right).",
+      "display": false
+    },
+    {
+      "tex": "x^{\\log}",
+      "display": false
+    },
+    {
+      "tex": "x_{\\min}^{\\max}",
+      "display": false
+    },
+    {
+      "tex": "x_{y_{\\log}}",
+      "display": false
+    },
+    {
+      "tex": "x_{\\operatorname{clamp}}^{\\operatorname{max}}",
+      "display": false
+    },
+    {
+      "tex": "L_{\\log}(p,y)=-y\\log p-(1-y)\\log(1-p).",
+      "display": true
+    },
+    {
+      "tex": "\\eta(S)=\\operatorname{clamp}\\!\\left(\\eta_{\\mathrm{base}}[1+\\alpha\\tanh(\\beta S)],\\eta_{\\min},\\eta_{\\max}\\right).",
+      "display": true
+    },
+    {
+      "tex": "x^{\\log}",
+      "display": true
+    },
+    {
+      "tex": "x_{\\min}^{\\max}",
+      "display": true
+    },
+    {
+      "tex": "x_{y_{\\log}}",
+      "display": true
+    },
+    {
+      "tex": "x_{\\operatorname{clamp}}^{\\operatorname{max}}",
+      "display": true
+    }
+  ],
+  "mathml": [
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><msub><mi>L</mi><mrow><mi>log</mi><mo>⁡</mo></mrow></msub><mo stretchy=\"false\">(</mo><mi>p</mi><mo separator=\"true\">,</mo><mi>y</mi><mo stretchy=\"false\">)</mo><mo>=</mo><mo>−</mo><mi>y</mi><mi>log</mi><mo>⁡</mo><mi>p</mi><mo>−</mo><mo stretchy=\"false\">(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo stretchy=\"false\">)</mo><mi>log</mi><mo>⁡</mo><mo stretchy=\"false\">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy=\"false\">)</mo><mi mathvariant=\"normal\">.</mi></mrow><annotation encoding=\"application/x-tex\">L_{\\log}(p,y)=-y\\log p-(1-y)\\log(1-p).</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><mi>η</mi><mo stretchy=\"false\">(</mo><mi>S</mi><mo stretchy=\"false\">)</mo><mo>=</mo><mi mathvariant=\"normal\">clamp</mi><mo>⁡</mo><mtext> ⁣</mtext><mrow><mo fence=\"true\">(</mo><msub><mi>η</mi><mrow><mi mathvariant=\"normal\">b</mi><mi mathvariant=\"normal\">a</mi><mi mathvariant=\"normal\">s</mi><mi mathvariant=\"normal\">e</mi></mrow></msub><mo stretchy=\"false\">[</mo><mn>1</mn><mo>+</mo><mi>α</mi><mi>tanh</mi><mo>⁡</mo><mo stretchy=\"false\">(</mo><mi>β</mi><mi>S</mi><mo stretchy=\"false\">)</mo><mo stretchy=\"false\">]</mo><mo separator=\"true\">,</mo><msub><mi>η</mi><mrow><mi>min</mi><mo>⁡</mo></mrow></msub><mo separator=\"true\">,</mo><msub><mi>η</mi><mrow><mi>max</mi><mo>⁡</mo></mrow></msub><mo fence=\"true\">)</mo></mrow><mi mathvariant=\"normal\">.</mi></mrow><annotation encoding=\"application/x-tex\">\\eta(S)=\\operatorname{clamp}\\!\\left(\\eta_{\\mathrm{base}}[1+\\alpha\\tanh(\\beta S)],\\eta_{\\min},\\eta_{\\max}\\right).</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><msup><mi>x</mi><mrow><mi>log</mi><mo>⁡</mo></mrow></msup></mrow><annotation encoding=\"application/x-tex\">x^{\\log}</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><msubsup><mi>x</mi><mrow><mi>min</mi><mo>⁡</mo></mrow><mrow><mi>max</mi><mo>⁡</mo></mrow></msubsup></mrow><annotation encoding=\"application/x-tex\">x_{\\min}^{\\max}</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><msub><mi>x</mi><msub><mi>y</mi><mrow><mi>log</mi><mo>⁡</mo></mrow></msub></msub></mrow><annotation encoding=\"application/x-tex\">x_{y_{\\log}}</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><semantics><mrow><msubsup><mi>x</mi><mrow><mi mathvariant=\"normal\">clamp</mi><mo>⁡</mo></mrow><mrow><mi mathvariant=\"normal\">max</mi><mo>⁡</mo></mrow></msubsup></mrow><annotation encoding=\"application/x-tex\">x_{\\operatorname{clamp}}^{\\operatorname{max}}</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><semantics><mrow><msub><mi>L</mi><mrow><mi>log</mi><mo>⁡</mo></mrow></msub><mo stretchy=\"false\">(</mo><mi>p</mi><mo separator=\"true\">,</mo><mi>y</mi><mo stretchy=\"false\">)</mo><mo>=</mo><mo>−</mo><mi>y</mi><mi>log</mi><mo>⁡</mo><mi>p</mi><mo>−</mo><mo stretchy=\"false\">(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo stretchy=\"false\">)</mo><mi>log</mi><mo>⁡</mo><mo stretchy=\"false\">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy=\"false\">)</mo><mi mathvariant=\"normal\">.</mi></mrow><annotation encoding=\"application/x-tex\">L_{\\log}(p,y)=-y\\log p-(1-y)\\log(1-p).</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><semantics><mrow><mi>η</mi><mo stretchy=\"false\">(</mo><mi>S</mi><mo stretchy=\"false\">)</mo><mo>=</mo><mi mathvariant=\"normal\">clamp</mi><mo>⁡</mo><mtext> ⁣</mtext><mrow><mo fence=\"true\">(</mo><msub><mi>η</mi><mrow><mi mathvariant=\"normal\">b</mi><mi mathvariant=\"normal\">a</mi><mi mathvariant=\"normal\">s</mi><mi mathvariant=\"normal\">e</mi></mrow></msub><mo stretchy=\"false\">[</mo><mn>1</mn><mo>+</mo><mi>α</mi><mi>tanh</mi><mo>⁡</mo><mo stretchy=\"false\">(</mo><mi>β</mi><mi>S</mi><mo stretchy=\"false\">)</mo><mo stretchy=\"false\">]</mo><mo separator=\"true\">,</mo><msub><mi>η</mi><mrow><mi>min</mi><mo>⁡</mo></mrow></msub><mo separator=\"true\">,</mo><msub><mi>η</mi><mrow><mi>max</mi><mo>⁡</mo></mrow></msub><mo fence=\"true\">)</mo></mrow><mi mathvariant=\"normal\">.</mi></mrow><annotation encoding=\"application/x-tex\">\\eta(S)=\\operatorname{clamp}\\!\\left(\\eta_{\\mathrm{base}}[1+\\alpha\\tanh(\\beta S)],\\eta_{\\min},\\eta_{\\max}\\right).</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><semantics><mrow><msup><mi>x</mi><mrow><mi>log</mi><mo>⁡</mo></mrow></msup></mrow><annotation encoding=\"application/x-tex\">x^{\\log}</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><semantics><mrow><msubsup><mi>x</mi><mrow><mi>min</mi><mo>⁡</mo></mrow><mrow><mi>max</mi><mo>⁡</mo></mrow></msubsup></mrow><annotation encoding=\"application/x-tex\">x_{\\min}^{\\max}</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><semantics><mrow><msub><mi>x</mi><msub><mi>y</mi><mrow><mi>log</mi><mo>⁡</mo></mrow></msub></msub></mrow><annotation encoding=\"application/x-tex\">x_{y_{\\log}}</annotation></semantics></math>",
+    "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><semantics><mrow><msubsup><mi>x</mi><mrow><mi mathvariant=\"normal\">clamp</mi><mo>⁡</mo></mrow><mrow><mi mathvariant=\"normal\">max</mi><mo>⁡</mo></mrow></msubsup></mrow><annotation encoding=\"application/x-tex\">x_{\\operatorname{clamp}}^{\\operatorname{max}}</annotation></semantics></math>"
+  ]
+}

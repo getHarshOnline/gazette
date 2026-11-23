@@ -1,0 +1,121 @@
+[
+  {
+    "id": "workspace-validation",
+    "query": "check workspace configuration",
+    "expected": "check_workspace",
+    "confusable": "check_composition",
+    "read_only": true
+  },
+  {
+    "id": "publication-render",
+    "query": "render publication sites",
+    "expected": "render_sites",
+    "confusable": "qualify_sites",
+    "read_only": false
+  },
+  {
+    "id": "generated-documentation",
+    "query": "check authored manual and generated reference navigation",
+    "expected": "check_documentation",
+    "confusable": "assemble_docs",
+    "read_only": true
+  },
+  {
+    "id": "theme-composition-inspection",
+    "query": "inspect selected theme package composition evidence",
+    "expected": "inspect_composition",
+    "confusable": "check_composition",
+    "read_only": true
+  },
+  {
+    "id": "theme-template-compilation",
+    "query": "compile selected theme templates without rendering",
+    "expected": "compile_templates",
+    "confusable": "render_sites",
+    "read_only": true
+  },
+  {
+    "id": "publication-model-inspection",
+    "query": "inspect resolved publication model and page packages",
+    "expected": "inspect_publication",
+    "confusable": "review_publication",
+    "read_only": true
+  },
+  {
+    "id": "theme-page-context-review",
+    "query": "review exact theme page contexts",
+    "expected": "review_publication",
+    "confusable": "inspect_publication",
+    "read_only": true
+  },
+  {
+    "id": "authoring-page-package",
+    "query": "inspect page package ownership for an open authoring document",
+    "expected": "authoring_page_package",
+    "confusable": "inspect_publication",
+    "read_only": true
+  },
+  {
+    "id": "markdown-inspection",
+    "query": "inspect markdown source",
+    "expected": "inspect_markdown",
+    "confusable": "inspect_toml",
+    "read_only": true
+  },
+  {
+    "id": "local-preview",
+    "query": "start preview for local site",
+    "expected": "start_preview",
+    "confusable": "start_production_preview",
+    "read_only": false
+  },
+  {
+    "id": "store-inspection",
+    "query": "inspect store sqlite state",
+    "expected": "inspect_store",
+    "confusable": "inspect_journal",
+    "read_only": false
+  },
+  {
+    "id": "store-backup",
+    "query": "backup sqlite store",
+    "expected": "backup_store",
+    "confusable": "prepare_store_restore",
+    "read_only": false
+  },
+  {
+    "id": "backup-verification",
+    "query": "verify existing sqlite backup",
+    "expected": "verify_backup",
+    "confusable": "backup_store",
+    "read_only": false
+  },
+  {
+    "id": "github-pages-observation",
+    "query": "observe github pages build status",
+    "expected": "observe_github_pages_build",
+    "confusable": "observe_delivery",
+    "read_only": true
+  },
+  {
+    "id": "interrupted-release-recovery",
+    "query": "operate interrupted release recovery session",
+    "expected": "operate_recovery_session",
+    "confusable": "open_recovery_session",
+    "read_only": false
+  },
+  {
+    "id": "prepared-authorization-verification",
+    "query": "verify prepared release authorization",
+    "expected": "verify_prepared_authorization",
+    "confusable": "verify_release_authorization",
+    "read_only": false
+  },
+  {
+    "id": "registry-reconciliation",
+    "query": "reconcile publication registry",
+    "expected": "reconcile_registry",
+    "confusable": "inspect_registry",
+    "read_only": false
+  }
+]

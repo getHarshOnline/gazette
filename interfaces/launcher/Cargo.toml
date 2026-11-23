@@ -1,0 +1,48 @@
+[package]
+name = "gazette-launcher"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "The gazette executable: command line, MCP server and language server in one program."
+autotests = true
+
+[lints]
+workspace = true
+
+[dependencies]
+gazette-cli.workspace = true
+gazette-mcp.workspace = true
+gazette-lsp.workspace = true
+
+[[bin]]
+name = "gazette"
+path = "src/main.rs"
+
+# Own process dispatch lets crash fixtures keep live connections in a child
+# without test-only commands in the product executable.
+[[test]]
+name = "store_crash"
+path = "tests/store_crash.rs"
+harness = false
+
+[[test]]
+name = "stage_retention"
+path = "tests/stage_retention.rs"
+harness = false
+
+[dev-dependencies]
+gazette-test-support.workspace = true
+jsonschema.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+base64.workspace = true
+ed25519-dalek.workspace = true
+serde_jcs.workspace = true
+gazette-adapter-markdown.workspace = true
+gazette-adapter-fs.workspace = true
+gazette-sdk = { workspace = true, features = ["native-local"] }
+tempfile.workspace = true
+git2.workspace = true
+rusqlite.workspace = true

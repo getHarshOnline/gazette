@@ -1,0 +1,25 @@
+[package]
+name = "gazette-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Shared values and invariants that every Gazette crate builds on: sources, publication projections, release evidence and effect permissions."
+
+[lints]
+workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+spdx.workspace = true
+oxilangtag.workspace = true
+chrono.workspace = true
+sha2.workspace = true
+percent-encoding.workspace = true
+url.workspace = true
+cssparser.workspace = true
+html5ever.workspace = true
+slug.workspace = true

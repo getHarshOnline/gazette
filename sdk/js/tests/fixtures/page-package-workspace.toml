@@ -1,0 +1,17 @@
+[[principals]]
+id='owner:one'
+kind='person'
+[[sites]]
+id='site:one'
+publisher='owner:one'
+deployable=false
+[[brands]]
+id='brand:one'
+name='Page package fixture'
+[[brands.publications]]
+site='site:one'
+public_base_url='https://example.test/'
+authored=[{source='source:content',target='content'}]
+[[sources]]
+id='source:content'
+location={kind='filesystem',root='/not-opened/content'}

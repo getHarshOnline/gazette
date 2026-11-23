@@ -1,0 +1,59 @@
+[package]
+name = "gazette-node"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Node.js bindings for Gazette's Rust SDK."
+
+[package.metadata.gazette]
+# The repository-source coordinate must cover the distributable JavaScript and
+# TypeScript contract as well as the native addon sources Cargo discovers.
+source-inputs = [
+    "analytics",
+    "index.d.ts",
+    "index.mjs",
+    "package.json",
+    "search",
+    "tools/package-addon.mjs",
+    "webmcp",
+]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# napi-rs registration emits a narrowly generated unsafe-code allowance. Deny
+# handwritten unsafe here while allowing that provider FFI expansion; all other
+# workspace lint settings remain identical. The workspace itself stays forbid.
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "deny"
+unreachable_pub = "deny"
+
+[lints.clippy]
+unwrap_used = "warn"
+doc_markdown = "deny"
+missing_errors_doc = "deny"
+missing_panics_doc = "deny"
+
+[lints.rustdoc]
+bare_urls = "deny"
+broken_intra_doc_links = "deny"
+invalid_codeblock_attributes = "deny"
+invalid_html_tags = "deny"
+private_intra_doc_links = "deny"
+
+[dependencies]
+gazette-sdk = { workspace = true, features = ["native-local"] }
+serde.workspace = true
+serde_json.workspace = true
+napi.workspace = true
+napi-derive.workspace = true
+
+[build-dependencies]
+napi-build.workspace = true
+
+[dev-dependencies]
+# Native Rust tests do not run inside a Node host.
+napi = { workspace = true, features = ["dyn-symbols"] }

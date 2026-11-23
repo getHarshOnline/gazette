@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ content.title }}</title>
+    {% if content.description is defined and content.description %}<meta name="description" content="{{ content.description }}">{% endif %}
+    {% if route is defined and route %}<link rel="canonical" href="{{ route.canonical_url }}">{% endif %}
+    {% if json_ld is defined %}<script type="application/ld+json">{{ json_ld | json_script }}</script>{% endif %}
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; background: #f7f5ef; color: #252823; }
+      body { margin: 0 auto; max-width: 46rem; padding: 2rem 1.5rem 5rem; font-size: 1.125rem; line-height: 1.7; }
+      header { padding-bottom: 2rem; border-bottom: 1px solid #8b8f83; }
+      main { padding-top: 1.5rem; }
+      h1, h2 { line-height: 1.2; letter-spacing: -.025em; }
+      h1 { font-size: clamp(2rem, 6vw, 3.2rem); }
+      h2 { margin-top: 2.5rem; }
+      a { color: inherit; text-underline-offset: .2em; }
+      a:focus-visible { outline: 2px solid currentColor; outline-offset: .2em; }
+      nav ul { padding-left: 1.3rem; }
+      nav li { margin-block: 1rem; }
+      nav p { margin-top: .2rem; }
+      code { font-size: .9em; overflow-wrap: anywhere; }
+      pre { overflow-x: auto; }
+      .article-credit { font-size: 1rem; }
+      .article-tools { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid #8b8f83; }
+      .article-tools details + details { margin-top: 1rem; }
+      summary { cursor: pointer; padding-block: .5rem; }
+      summary:focus-visible { outline: 2px solid currentColor; outline-offset: .2em; }
+      .citation-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+      .citation-formats dt { font-weight: 600; }
+      .citation-formats dd { margin-inline-start: 0; }
+      @media (prefers-color-scheme: dark) { :root { background: #20221f; color: #f0eee5; } }
+    </style>
+    {% block presentation %}{% endblock presentation %}
+  </head>
+  <body>
+    <header><a href="/">Field Notes</a></header>
+    <main>
+      {% if opening is defined and opening %}{{ opening.heading_html | safe }}{% endif %}
+      {% set authors = attributions | filter(attribute="role",value="author") | filter(attribute="principal.name") %}
+      {% if authors %}<p class="article-credit">By {% for author in authors %}{{ author.principal.name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+      {% if opening is defined and opening %}{{ opening.remainder_html | safe }}{% else %}{{ body_html | safe }}{% endif %}
+      {% set entries = children %}
+      {% set ordered = content.structure.kind == "journey" %}
+      {% if ordered %}{% set entries = steps %}{% endif %}
+      {% if entries %}
+      <nav aria-label="{% if ordered %}Read in order{% else %}Notes in this collection{% endif %}">
+        {% if ordered %}<ol>{% else %}<ul>{% endif %}
+        {% for item in entries %}
+        <li><a href="{{ item.resolved_route.url }}">{{ item.title }}</a>{% if item.description %}<p>{{ item.description }}</p>{% endif %}</li>
+        {% endfor %}
+        {% if ordered %}</ol>{% else %}</ul>{% endif %}
+      </nav>
+      {% endif %}
+      {% for membership in journeys %}
+      <nav aria-label="{{ membership.journey.title }}">
+        {% if membership.route %}<p><a href="{{ membership.route.url }}">{{ membership.journey.title }}</a> · {{ membership.position + 1 }} of {{ membership.total }}</p>{% endif %}
+        {% if membership.previous and membership.previous.route %}<p>Previous: <a rel="prev" href="{{ membership.previous.route.url }}">{{ membership.previous.node.title }}</a></p>{% endif %}
+        {% if membership.next and membership.next.route %}<p>Next: <a rel="next" href="{{ membership.next.route.url }}">{{ membership.next.node.title }}</a></p>{% endif %}
+      </nav>
+      {% endfor %}
+      {% set has_citation = citation is defined and citation %}
+      {% set has_notes = notes is defined and notes %}
+      {% set has_license = content.license is defined and content.license %}
+      {% set rights_holders = attributions | filter(attribute="role",value="rights-holder") | filter(attribute="principal.name") %}
+      {% if has_citation or has_notes or has_license or rights_holders %}
+      <footer class="article-tools">
+        {% if rights_holders %}<p class="article-credit">Rights holder: {% for holder in rights_holders %}{{ holder.principal.name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+        {% if has_citation %}
+        <details class="article-citation">
+          <summary>Cite this article</summary>
+          {% if citation.text is defined and citation.text %}<p class="citation-text">{{ citation.text }}</p>{% endif %}
+          {% if citation.formats %}<dl class="citation-formats">{% for format in citation.formats %}<dt>{{ format.label }}</dt><dd class="citation-text">{{ format.text }}</dd>{% endfor %}</dl>{% endif %}
+          {% if citation.bibtex is defined or citation.pdf is defined %}
+          <ul>
+            {% if citation.bibtex is defined %}<li><a href="{{ citation.bibtex }}">Download BibTeX</a></li>{% endif %}
+            {% if citation.pdf is defined %}<li><a href="{{ citation.pdf }}">Download PDF</a></li>{% endif %}
+          </ul>
+          {% endif %}
+        </details>
+        {% endif %}
+        {% if has_notes %}
+        <details class="article-notes" id="article-notes">
+          <summary>Notes</summary>
+          {{ notes.body_html | safe }}
+        </details>
+        {% endif %}
+        {% if has_license %}<p><a href="{{ content.license }}">Content licence</a></p>{% endif %}
+      </footer>
+      {% endif %}
+    </main>
+  </body>
+</html>

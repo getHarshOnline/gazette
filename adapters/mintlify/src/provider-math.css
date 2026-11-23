@@ -1,0 +1,4 @@
+/* Qualified with @mintlify/client 0.0.4101. Its server-rendered formulas
+   need this same first-party stylesheet before the preload-upgrade script runs.
+   Requalify the provider asset URL with the Mintlify compatibility profile. */
+@import url("/_next/static/media/katex/0.16.47/katex.min.css");

@@ -1,0 +1,16 @@
+{
+  "name": "KaTeX",
+  "version": "0.18.4",
+  "source": "https://registry.npmjs.org/katex/-/katex-0.18.4.tgz",
+  "tarball_sha256": "0090b1ebccc77d1402ec95e85ee539e1da514d6cd6934156c00baf39dcb0e3aa",
+  "module": "katex-0.18.4/katex.mjs",
+  "upstream_module_sha256": "9069225f8307ea43f5c98e3c4772e26572a234a8d740018724acfe57f7467cbe",
+  "module_sha256": "bd1bb5ed9b9e610e5c75d9954273b842287457eab01cbd2f9dfd49d96762aaa1",
+  "local_patch": {
+    "id": "mathml-script-operand-fragments",
+    "scope": "supsub mathmlBuilder wraps DocumentFragment subscript and superscript operands in native MathNode mrow; exact TeX annotation and all operand children are retained"
+  },
+  "license": "MIT",
+  "license_file": "KATEX-LICENSE",
+  "license_sha256": "766ccc1f306c885aa45542a9846bbd0a505b27a0374f146778171c2254ce18e3"
+}

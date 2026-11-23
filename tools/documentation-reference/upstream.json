@@ -1,0 +1,46 @@
+{
+  "role": "Optional local documentation producer extension; not Gazette SDK/runtime dependency",
+  "upstream_partials": {
+    "type.reflection.declaration.js": {
+      "sha256": "da6519fb9a7c2348ff31eef6110f5e2900f873a76863c7092f531b559fecf8c2",
+      "version": "4.14.1",
+      "source": "https://github.com/typedoc2md/typedoc-plugin-markdown",
+      "license": "MIT"
+    },
+    "member.indexSignature.js": {
+      "sha256": "58278045e288310df3e56bf6c0f8aef225fa6029df6ad3fd29072a8c6b21fae9",
+      "version": "4.14.1",
+      "source": "https://github.com/typedoc2md/typedoc-plugin-markdown",
+      "license": "MIT"
+    }
+  },
+  "changes": [
+    "Preserve readonly in anonymous properties including callback properties",
+    "Preserve readonly in inline and standalone index signatures",
+    "Use explicitly pinned provider utilities through source-owned module",
+    "Normalize only producer-owned page titles with pinned upstream plain-text/escaping helpers; preserve full generic constraints/defaults and untouched body links"
+  ],
+  "upstream_utilities": {
+    "page.pageTitle.js": {
+      "version": "4.14.1",
+      "role": "Unmodified producer title partial wrapped by source-owned theme",
+      "sha256": "1a1305d09db1ab5dcc1945b0121ccbe4bfa55b70f2ba864f66e3a98c643dae14",
+      "source": "https://github.com/typedoc2md/typedoc-plugin-markdown",
+      "license": "MIT"
+    },
+    "escape-chars.js": {
+      "version": "4.14.1",
+      "role": "Unmodified provider utility escapes complete plain title as Markdown text",
+      "sha256": "950782bc7caadae963e773c72c7e1c5d06fb8608137ae57d362d98c4849814a3",
+      "source": "https://github.com/typedoc2md/typedoc-plugin-markdown",
+      "license": "MIT"
+    },
+    "un-escape-chars.js": {
+      "version": "4.14.1",
+      "role": "Unmodified provider utility preserves visible title text while removing formatter-owned inline decoration",
+      "sha256": "3b904a0d5ea39d99f49fb0dcd903cabb470c8a5684d216f49f2e04e7d4138ddd",
+      "source": "https://github.com/typedoc2md/typedoc-plugin-markdown",
+      "license": "MIT"
+    }
+  }
+}

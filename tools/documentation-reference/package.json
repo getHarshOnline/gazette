@@ -1,0 +1,18 @@
+{
+  "name": "gazette-documentation-reference",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "engines": { "node": ">=22.18.0" },
+  "exports": "./plugin.mjs",
+  "scripts": {
+    "generate": "typedoc --options typedoc.json --out generated/reference",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "typedoc": "0.28.20",
+    "typedoc-plugin-markdown": "4.14.1",
+    "typescript": "5.9.3"
+  }
+}

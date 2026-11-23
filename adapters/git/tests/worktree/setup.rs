@@ -1,0 +1,393 @@
+//! Real local parent acquisition and configured checkout metadata without working-file writes.
+
+use gazette_adapter_git::{Git, ParentAcquirer};
+use gazette_adapter_process::Runner;
+use gazette_core::{release::*, source::CommitId};
+use gazette_ports::{
+    process::CaptureRunner,
+    release::{OutputCheckout, ReleaseParentAcquisition},
+};
+use git2::{Repository, Signature, Time};
+use std::{
+    fs,
+    os::unix::fs::{MetadataExt, PermissionsExt},
+    path::{Path, PathBuf},
+    time::Duration,
+};
+use tempfile::TempDir;
+
+struct Fixture {
+    root: TempDir,
+    remote: PathBuf,
+    isolation: PathBuf,
+    first: CommitId,
+    second: CommitId,
+}
+impl Fixture {
+    fn new() -> Self {
+        let root = tempfile::tempdir().unwrap();
+        let remote = root.path().join("remote.git");
+        let repository = Repository::init_bare(&remote).unwrap();
+        let first = commit(&repository, None, b"Remote README\n");
+        let second = commit(&repository, Some(&first), b"Remote README, revised\n");
+        let isolation = root.path().join("isolation");
+        fs::create_dir(&isolation).unwrap();
+        fs::set_permissions(&isolation, fs::Permissions::from_mode(0o700)).unwrap();
+        Self {
+            root,
+            remote,
+            isolation,
+            first,
+            second,
+        }
+    }
+    fn selection(&self) -> GitSelection {
+        GitSelection {
+            program: gazette_test_support::git().to_path_buf(),
+            isolation: self.isolation.clone(),
+            credentials: None,
+        }
+    }
+    fn destination(&self) -> PublicationDestination {
+        PublicationDestination::Git {
+            remote: self.remote.to_str().unwrap().into(),
+            branch: "main".into(),
+        }
+    }
+    fn acquire(
+        &self,
+        name: &str,
+        options: ParentAcquisitionOptions,
+    ) -> Result<ParentAcquisitionReport, RepositorySetupError> {
+        ParentAcquirer {
+            runner: &Runner,
+            selection: &self.selection(),
+        }
+        .acquire_parent(
+            ParentAcquisitionRequest {
+                root: &self.root.path().join(name),
+                remote: self.remote.to_str().unwrap(),
+                branch: "main",
+                expected: &self.second,
+                protected_roots: &[],
+            },
+            options,
+        )
+    }
+    fn checkout(
+        &self,
+        root: &Path,
+        expected: &OutputCheckoutState,
+        parent: Option<&OutputCheckoutParent>,
+    ) -> Result<OutputCheckoutReport, RepositorySetupError> {
+        Git.prepare_output_checkout(
+            OutputCheckoutRequest {
+                root,
+                destination: &self.destination(),
+                expected,
+                parent,
+                protected_roots: &[],
+            },
+            OutputCheckoutOptions {
+                allow_initialize: true,
+                allow_update: true,
+                ..Default::default()
+            },
+        )
+    }
+}
+fn commit(repo: &Repository, parent: Option<&CommitId>, readme: &[u8]) -> CommitId {
+    let blob = repo.blob(readme).unwrap();
+    let mut tree = repo.treebuilder(None).unwrap();
+    tree.insert("README.md", blob, 0o100644).unwrap();
+    let tree = repo.find_tree(tree.write().unwrap()).unwrap();
+    let signature = Signature::new("Fixture", "fixture@example.invalid", &Time::new(1, 0)).unwrap();
+    let parent = parent.map(|id| {
+        repo.find_commit(git2::Oid::from_str(id.as_str()).unwrap())
+            .unwrap()
+    });
+    let parents = parent.iter().collect::<Vec<_>>();
+    let id = repo
+        .commit(
+            None,
+            &signature,
+            &signature,
+            "fixture parent",
+            &tree,
+            &parents,
+        )
+        .unwrap();
+    repo.reference("refs/heads/main", id, true, "fixture setup")
+        .unwrap();
+    id.to_string().parse().unwrap()
+}
+fn acquisition_options() -> ParentAcquisitionOptions {
+    ParentAcquisitionOptions {
+        allow_acquire: true,
+        read: RemoteReadOptions {
+            allow_read: true,
+            timeout: Duration::from_secs(20),
+            ..Default::default()
+        },
+        ..Default::default()
+    }
+}
+
+#[test]
+fn acquired_readme_ancestry_initializes_main_without_copying_remote_or_overwriting_output() {
+    let f = Fixture::new();
+    let acquired = f.acquire("history.git", acquisition_options()).unwrap();
+    assert_eq!(acquired.parent, f.second);
+    let retained = Repository::open_bare(acquired.source.path()).unwrap();
+    assert!(
+        retained
+            .find_commit(git2::Oid::from_str(f.first.as_str()).unwrap())
+            .is_ok()
+    );
+    assert!(retained.references().unwrap().next().is_none());
+    assert!(retained.remotes().unwrap().is_empty());
+    assert!(!acquired.source.path().join("FETCH_HEAD").exists());
+    let output = f.root.path().join("output");
+    fs::create_dir(&output).unwrap();
+    fs::write(output.join("index.html"), "generated bytes").unwrap();
+    fs::write(output.join("notes.txt"), "unowned notes").unwrap();
+    let parent = OutputCheckoutParent {
+        source: acquired.source,
+        commit: acquired.parent,
+    };
+    let report = f
+        .checkout(&output, &OutputCheckoutState::Missing, Some(&parent))
+        .unwrap();
+    assert_eq!(report.parent, Some(f.second.clone()));
+    assert_eq!(
+        fs::read(output.join("index.html")).unwrap(),
+        b"generated bytes"
+    );
+    assert_eq!(
+        fs::read(output.join("notes.txt")).unwrap(),
+        b"unowned notes"
+    );
+    assert!(
+        !output.join("README.md").exists(),
+        "remote files never acquire output ownership"
+    );
+    let repo = Repository::open(&output).unwrap();
+    assert_eq!(repo.head().unwrap().name().unwrap(), "refs/heads/main");
+    assert_eq!(
+        repo.head().unwrap().target().unwrap().to_string(),
+        f.second.as_str()
+    );
+    assert_eq!(repo.index().unwrap().len(), 1);
+    assert_eq!(
+        repo.config()
+            .unwrap()
+            .get_string("branch.main.remote")
+            .unwrap(),
+        "origin"
+    );
+    assert_eq!(
+        repo.config()
+            .unwrap()
+            .get_string("branch.main.merge")
+            .unwrap(),
+        "refs/heads/main"
+    );
+    assert!(
+        repo.find_commit(git2::Oid::from_str(f.first.as_str()).unwrap())
+            .is_ok()
+    );
+    let remote = Repository::open_bare(&f.remote).unwrap();
+    assert_eq!(
+        remote
+            .find_reference("refs/heads/main")
+            .unwrap()
+            .target()
+            .unwrap()
+            .to_string(),
+        f.second.as_str()
+    );
+}
+
+#[test]
+fn unborn_adoption_preserves_git_inode_and_existing_updates_require_exact_fast_forward() {
+    let f = Fixture::new();
+    let output = f.root.path().join("output");
+    let repo = Repository::init(&output).unwrap();
+    repo.remote("origin", f.remote.to_str().unwrap()).unwrap();
+    drop(repo);
+    let inode = fs::metadata(output.join(".git")).unwrap().ino();
+    let first = OutputCheckoutParent {
+        source: ParentSource::Bare {
+            path: f.remote.clone(),
+        },
+        commit: f.first.clone(),
+    };
+    f.checkout(&output, &OutputCheckoutState::Unborn, Some(&first))
+        .unwrap();
+    assert_eq!(fs::metadata(output.join(".git")).unwrap().ino(), inode);
+    let second = OutputCheckoutParent {
+        source: first.source.clone(),
+        commit: f.second.clone(),
+    };
+    f.checkout(
+        &output,
+        &OutputCheckoutState::Commit {
+            oid: f.first.clone(),
+        },
+        Some(&second),
+    )
+    .unwrap();
+    assert_eq!(fs::metadata(output.join(".git")).unwrap().ino(), inode);
+    let changed = f
+        .checkout(
+            &output,
+            &OutputCheckoutState::Commit {
+                oid: f.first.clone(),
+            },
+            Some(&second),
+        )
+        .unwrap_err();
+    assert_eq!(changed.effect, RepositorySetupEffect::NotAttempted);
+    let backwards = f
+        .checkout(
+            &output,
+            &OutputCheckoutState::Commit {
+                oid: f.second.clone(),
+            },
+            Some(&first),
+        )
+        .unwrap_err();
+    assert_eq!(backwards.effect, RepositorySetupEffect::NotAttempted);
+    assert!(backwards.reason.contains("fast-forward"));
+}
+
+#[test]
+fn missing_root_and_unborn_remote_remain_unborn_and_unsafe_adoption_is_refused() {
+    let f = Fixture::new();
+    let output = f.root.path().join("empty");
+    let report = f
+        .checkout(&output, &OutputCheckoutState::Missing, None)
+        .unwrap();
+    assert_eq!(report.parent, None);
+    assert!(Repository::open(&output).unwrap().head().is_err());
+    let inode = fs::metadata(output.join(".git")).unwrap().ino();
+    let first = OutputCheckoutParent {
+        source: ParentSource::Bare {
+            path: f.remote.clone(),
+        },
+        commit: f.first.clone(),
+    };
+    let initialized = f
+        .checkout(&output, &OutputCheckoutState::Unborn, Some(&first))
+        .unwrap();
+    assert_eq!(initialized.parent, Some(f.first.clone()));
+    assert_eq!(fs::metadata(output.join(".git")).unwrap().ino(), inode);
+    let unsafe_root = f.root.path().join("unsafe");
+    let repo = Repository::init(&unsafe_root).unwrap();
+    drop(repo);
+    fs::write(
+        unsafe_root.join(".git/config"),
+        b"[include]\npath = /never-read\n",
+    )
+    .unwrap();
+    let error = f
+        .checkout(&unsafe_root, &OutputCheckoutState::Unborn, None)
+        .unwrap_err();
+    assert_eq!(error.effect, RepositorySetupEffect::NotAttempted);
+    assert!(error.reason.contains("unsupported section"));
+    let denied = f.root.path().join("denied");
+    let error = Git
+        .prepare_output_checkout(
+            OutputCheckoutRequest {
+                root: &denied,
+                destination: &f.destination(),
+                expected: &OutputCheckoutState::Missing,
+                parent: None,
+                protected_roots: &[],
+            },
+            Default::default(),
+        )
+        .unwrap_err();
+    assert_eq!(error.effect, RepositorySetupEffect::NotAttempted);
+    assert!(!denied.exists());
+}
+
+#[test]
+fn acquisition_refuses_wrong_pins_and_preserves_post_fetch_bound_failures() {
+    let f = Fixture::new();
+    let root = f.root.path().join("wrong.git");
+    let error = ParentAcquirer {
+        runner: &Runner,
+        selection: &f.selection(),
+    }
+    .acquire_parent(
+        ParentAcquisitionRequest {
+            root: &root,
+            remote: f.remote.to_str().unwrap(),
+            branch: "main",
+            expected: &f.first,
+            protected_roots: &[],
+        },
+        acquisition_options(),
+    )
+    .unwrap_err();
+    assert_eq!(error.effect, RepositorySetupEffect::NotAttempted);
+    assert!(!root.exists());
+    let mut options = acquisition_options();
+    options.limits.storage_bytes = 1;
+    let error = f.acquire("bounded.git", options).unwrap_err();
+    assert_eq!(error.effect, RepositorySetupEffect::LocalStateMayRemain);
+    assert!(f.root.path().join("bounded.git").exists());
+    let replay = f.acquire("bounded.git", acquisition_options()).unwrap_err();
+    assert_eq!(replay.effect, RepositorySetupEffect::NotAttempted);
+}
+
+#[test]
+fn independent_readback_refuses_a_remote_move_after_fetch_without_falling_back_to_root() {
+    struct Moving {
+        remote: PathBuf,
+        parent: CommitId,
+    }
+    impl CaptureRunner for Moving {
+        fn capture(
+            &self,
+            request: gazette_core::process::CaptureRequest<'_>,
+        ) -> Result<gazette_core::process::Captured, gazette_core::process::Error> {
+            let fetched = request
+                .request
+                .command
+                .arguments
+                .iter()
+                .any(|arg| arg == "fetch");
+            let captured = Runner.capture(request)?;
+            if fetched {
+                let repo = Repository::open_bare(&self.remote).unwrap();
+                commit(&repo, Some(&self.parent), b"moved while acquiring\n");
+            }
+            Ok(captured)
+        }
+    }
+    let f = Fixture::new();
+    let root = f.root.path().join("moving.git");
+    let error = ParentAcquirer {
+        runner: &Moving {
+            remote: f.remote.clone(),
+            parent: f.second.clone(),
+        },
+        selection: &f.selection(),
+    }
+    .acquire_parent(
+        ParentAcquisitionRequest {
+            root: &root,
+            remote: f.remote.to_str().unwrap(),
+            branch: "main",
+            expected: &f.second,
+            protected_roots: &[],
+        },
+        acquisition_options(),
+    )
+    .unwrap_err();
+    assert_eq!(error.effect, RepositorySetupEffect::LocalStateMayRemain);
+    assert!(error.reason.contains("remote changed"));
+    assert!(root.exists());
+}

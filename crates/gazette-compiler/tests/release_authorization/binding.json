@@ -1,0 +1,77 @@
+{
+  "canonical_body_sha256": "2fcc02ab3b16e87f4338fd77c70c8ff35aa245563515f631518c08337c52fe81",
+  "coordinator_id": "coordinator:test",
+  "journal": {
+    "schema_version": 1,
+    "journal_id": [
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7
+    ],
+    "journal_epoch": 1,
+    "writer_fence": 9
+  },
+  "ordered_targets": [
+    {
+      "branch": "main",
+      "domain": "0.example",
+      "expected_remote_oid_or_unborn": {
+        "state": "unborn"
+      },
+      "local_commit_oid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "ordinal": 0,
+      "output_digest": "1111111111111111111111111111111111111111111111111111111111111111",
+      "prepared_release_receipt_ref": "1111111111111111111111111111111111111111111111111111111111111111",
+      "refspec": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:refs/heads/main",
+      "remote": "https://example.invalid/site-0.git"
+    }
+  ],
+  "publishers": [
+    {
+      "publisher_id": "publisher:one",
+      "publisher_key_id": "key:one",
+      "publisher_key_epoch": 1,
+      "authority_reference": "1111111111111111111111111111111111111111111111111111111111111111",
+      "role": "publisher",
+      "authorized_target_ordinals": [
+        0
+      ],
+      "public_key": "7UkoxijRwsbq6QM4kFmVYSlZJzpcY/k2NsFGFKyHN9E=",
+      "state": "active"
+    }
+  ],
+  "authority_frontier_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+  "revocation_frontier_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "supersession_frontier_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+  "observed_at": 120,
+  "emergency_stop": false
+}

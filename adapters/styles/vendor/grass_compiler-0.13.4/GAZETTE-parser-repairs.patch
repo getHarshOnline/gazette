@@ -1,0 +1,49 @@
+--- grass_compiler-0.13.4/src/builtin/functions/selector.rs
++++ grass_compiler-0.13.4/src/builtin/functions/selector.rs
+@@ -41,7 +41,7 @@
+     {
+         compound
+     } else {
+-        todo!()
++        return Err(("$selector: expected compound selector.", args.span()).into());
+     };
+ 
+     Ok(Value::List(
+--- grass_compiler-0.13.4/src/parse/sass.rs
++++ grass_compiler-0.13.4/src/parse/sass.rs
+@@ -44,7 +44,7 @@
+         loop {
+             let mut next = self.toks.next();
+             match next {
+-                Some(Token { kind: '\n', .. }) => {
++                None | Some(Token { kind: '\n', .. }) => {
+                     return Err(("expected */.", self.toks.prev_span()).into())
+                 }
+                 Some(Token { kind: '*', .. }) => {}
+--- grass_compiler-0.13.4/src/parse/stylesheet.rs
++++ grass_compiler-0.13.4/src/parse/stylesheet.rs
+@@ -1125,7 +1125,7 @@
+     }
+ 
+     fn _parse_moz_document_rule(&mut self, _name: Interpolation) -> SassResult<AstStmt> {
+-        todo!("special cased @-moz-document not yet implemented")
++        Err(("@-moz-document is not supported.", self.toks().current_span()).into())
+     }
+ 
+     fn unknown_at_rule(&mut self, name: Interpolation, start: usize) -> SassResult<AstStmt> {
+@@ -2446,6 +2446,7 @@
+             post_colon_whitespace.is_empty() && self.looking_at_interpolated_identifier();
+ 
+         let before_decl = self.toks().cursor();
++        let before_decl_flags = *self.flags();
+ 
+         let mut calculate_value = || {
+             let value = self.parse_expression(None, None, None)?;
+@@ -2469,6 +2470,7 @@
+                 }
+ 
+                 self.toks_mut().set_cursor(before_decl);
++                *self.flags_mut() = before_decl_flags;
+                 let additional = self.almost_any_value(false)?;
+                 if !self.is_indented() && self.toks_mut().next_char_is(';') {
+                     return Err(e);

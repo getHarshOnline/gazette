@@ -1,0 +1,5 @@
+package = 'theme:field-notes'
+namespace = 'field-notes'
+templates = 'templates'
+browser_theme_colors = { light = '#f7f5ef', dark = '#20221f' }
+render = { page = 'page.html', alias = 'alias.html' }

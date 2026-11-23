@@ -1,0 +1,17 @@
+[composition.chrome]
+skip_to_content_label = 'Skip to content'
+navigation_label = 'Primary navigation'
+footer_label = 'Site footer'
+[composition.chrome.shell]
+close_label = 'Close'
+[composition.chrome.shell.settings]
+trigger_label = 'Settings'
+title = 'Display settings'
+color_mode_label = 'Colour mode'
+color_mode_system_label = 'System'
+color_mode_light_label = 'Light'
+color_mode_dark_label = 'Dark'
+motion_label = 'Motion'
+motion_system_label = 'System'
+motion_reduce_label = 'Reduced'
+motion_allow_label = 'Full'

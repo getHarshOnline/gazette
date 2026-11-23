@@ -1,0 +1,20 @@
+{
+  "name": "gazette-typedoc-provider-qualification",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Exact Node documentation closure used only by Gazette provider qualification.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": "22.18.0"
+  },
+  "devDependencies": {
+    "@mdx-js/mdx": "3.1.1",
+    "parse5": "7.3.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "rehype-raw": "7.0.0",
+    "remark-frontmatter": "5.0.0",
+    "typedoc": "0.28.20",
+    "typescript": "5.9.3"
+  }
+}

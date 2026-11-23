@@ -1,0 +1,75 @@
+name: Dependency security qualification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  advisory-qualification:
+    name: ${{ matrix.system }} exact locked graphs
+    runs-on: ${{ matrix.system }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        system: [ubuntu-24.04, macos-15]
+    steps:
+      - name: Check out exact source
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+
+      - name: Select exact Node runtime
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: 22.18.0
+
+      - name: Select exact Python runtime
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: 3.13.7
+
+      - name: Select exact Go runtime
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.26.6
+          cache: false
+
+      - name: Provision exact scanners in runner-temporary roots
+        env:
+          CARGO_INSTALL_ROOT: ${{ runner.temp }}/gazette-security/cargo-audit
+          GOBIN: ${{ runner.temp }}/gazette-security/bin
+          GOTOOLCHAIN: local
+        run: |
+          mkdir -p "$CARGO_INSTALL_ROOT" "$GOBIN"
+          cargo install cargo-audit --version 0.22.2 --locked --root "$CARGO_INSTALL_ROOT"
+          python -m venv --copies "${{ runner.temp }}/gazette-security/pip-audit"
+          "${{ runner.temp }}/gazette-security/pip-audit/bin/python" -m pip install \
+            --disable-pip-version-check --require-hashes \
+            --requirement tools/security/pip-audit-requirements.txt
+          go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
+
+      - name: Qualify exact locked dependency graphs without mutation
+        run: |
+          python tools/check_dependencies.py \
+            --output-dir "${{ runner.temp }}/gazette-dependency-security" \
+            --cargo-audit "${{ runner.temp }}/gazette-security/cargo-audit/bin/cargo-audit" \
+            --pip-audit "${{ runner.temp }}/gazette-security/pip-audit/bin/pip-audit" \
+            --govulncheck "${{ runner.temp }}/gazette-security/bin/govulncheck" \
+            --npm "$(command -v npm)"
+
+      - name: Publish volatile qualification receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dependency-security-${{ matrix.system }}
+          path: ${{ runner.temp }}/gazette-dependency-security
+          if-no-files-found: error
+          retention-days: 14

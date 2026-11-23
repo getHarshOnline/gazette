@@ -1,0 +1,17 @@
+{
+  "name": "@rtepl/gazette",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later AND Apache-2.0",
+  "type": "module",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": { "types": "./index.d.ts", "import": "./index.mjs" },
+    "./search": { "types": "./search/index.d.ts", "import": "./search/index.mjs" },
+    "./analytics": { "types": "./analytics/index.d.ts", "import": "./analytics/index.mjs" },
+    "./webmcp": { "types": "./webmcp/index.d.ts", "import": "./webmcp/index.mjs" }
+  },
+  "files": ["index.mjs", "index.d.ts", "search", "analytics", "webmcp", "browser-resources.toml", "README.md"],
+  "scripts": { "test:typescript": "node tests/typescript.mjs" },
+  "engines": { "node": ">=22" }
+}

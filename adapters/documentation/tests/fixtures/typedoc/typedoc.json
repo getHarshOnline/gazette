@@ -1,0 +1,11 @@
+{
+  "name": "Gazette qualification",
+  "entryPoints": ["src/model.ts", "src/api.ts"],
+  "entryPointStrategy": "resolve",
+  "tsconfig": "tsconfig.json",
+  "plugin": [],
+  "readme": "none",
+  "includeVersion": true,
+  "disableGit": true,
+  "treatWarningsAsErrors": true
+}

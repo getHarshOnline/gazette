@@ -1,0 +1,6 @@
+{
+  "field": {"kind":"brand","identity":"brand:one","field":["name"]},
+  "inherited": {"site":"site:a","field":{"kind":"resource","resource":"module:search"},"path":["use"]},
+  "overridden": {"site":"site:z","field":{"kind":"theme"},"path":["package"]},
+  "disabled": {"site":"site:z","field":{"kind":"capability","capability":"publication.search/v1"},"path":["state"]}
+}

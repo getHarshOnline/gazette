@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Gazette"
+type: software
+version: 0.1.0
+authors:
+  - family-names: "Joshi"
+    given-names: "Harsh"
+    email: "info@rawthoughts.in"
+    website: "https://rawthoughts.in"
+    affiliation: "RawThoughts Enterprises Private Limited"
+repository-code: "https://github.com/getHarshOnline/gazette"
+url: "https://rawthoughts.in/gazette"
+abstract: >-
+  Gazette publishes a body of thought from the whole to its parts. It is a
+  publishing compiler that turns authored content and a workspace's
+  publication structure into websites, with collections, journeys and
+  crossings between publications declared once and carried into HTML,
+  navigation, search, feeds, JSON-LD and llms.txt.
+keywords:
+  - publishing-compiler
+  - semantic-publishing
+  - publication-graph
+  - structured-data
+  - documentation
+license:
+  - AGPL-3.0-or-later
+  - Apache-2.0

@@ -1,0 +1,45 @@
+# 🦀 é: source coordinates are bytes, not JavaScript string indices.
+[composition]
+theme = {package='theme:base',palette='palette:light'}
+[composition.plugins]
+'search-plugin' = {state='enabled'}
+[composition.capabilities]
+'publication.search/v1' = {state='enabled',provider={kind='plugin',package='search-plugin',provider='search'},requirement='required'}
+[composition.resources]
+'module:search' = {state='enabled',resource={owner={kind='plugin',package='search-plugin'},resource='module:search'},output='/assets/search.js',use='dependency'}
+[[principals]]
+id='owner:one'
+kind='organization'
+name='Synthetic publisher'
+[[sources]]
+id='source:theme'
+location={kind='repository',root='/not-read/synthetic/theme',commit='0000000000000000000000000000000000000000',subdirectory='templates'}
+[[theme_packages]]
+package='theme:base'
+source='source:theme'
+manifest='base-theme.toml'
+[[theme_packages]]
+package='theme:other'
+source='source:theme'
+manifest='other-theme.toml'
+[[plugin_packages]]
+package='search-plugin'
+source='source:theme'
+manifest='search-plugin.toml'
+[[sites]]
+id='site:z'
+publisher='owner:one'
+deployable=false
+[sites.composition]
+theme={package='theme:other'}
+[sites.composition.capabilities]
+'publication.search/v1'={state='disabled'}
+[sites.composition.resources]
+'module:search'={state='disabled'}
+[[sites]]
+id='site:a'
+publisher='owner:one'
+deployable=true
+[[brands]]
+id='brand:one'
+name='Rêve fixture'

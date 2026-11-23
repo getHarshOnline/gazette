@@ -1,0 +1,25 @@
+[package]
+name = "gazette-adapter-sqlite"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Keeps Gazette's release journal in SQLite: creation, observation, backup and restore."
+
+[package.metadata.gazette]
+source-inputs = ["schema"]
+
+[lints]
+workspace = true
+
+[dependencies]
+gazette-core.workspace = true
+gazette-ports.workspace = true
+rusqlite.workspace = true
+rusqlite_migration.workspace = true
+rustix.workspace = true
+tempfile.workspace = true
+sha2.workspace = true
+serde_json.workspace = true
+serde.workspace = true

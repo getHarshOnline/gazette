@@ -1,0 +1,9 @@
+package = "gazette-browser-sdk"
+
+[resources."module:analytics-sdk"]
+inputs = ["analytics/index.mjs"]
+build = { kind = "browser-module", entry = "analytics/index.mjs" }
+
+[resources."module:webmcp-sdk"]
+inputs = ["webmcp/index.mjs", "webmcp/data.mjs"]
+build = { kind = "browser-module", entry = "webmcp/index.mjs" }

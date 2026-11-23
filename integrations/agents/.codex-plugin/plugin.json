@@ -1,0 +1,14 @@
+{
+  "name": "gazette",
+  "version": "0.1.0",
+  "description": "Check and work on Gazette publications with local compiler feedback.",
+  "author": { "name": "RawThoughts Enterprises Private Limited" },
+  "license": "AGPL-3.0-or-later",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "requires_local_executor": true,
+  "interface": {
+    "displayName": "Gazette",
+    "shortDescription": "Check and work on local publications"
+  }
+}

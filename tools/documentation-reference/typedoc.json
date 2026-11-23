@@ -1,0 +1,27 @@
+{
+  "name": "Gazette JavaScript and browser SDKs",
+  "entryPoints": [
+    "../../sdk/js/index.d.ts",
+    "../../sdk/js/search/index.d.ts",
+    "../../sdk/js/analytics/index.d.ts",
+    "../../sdk/js/webmcp/index.d.ts"
+  ],
+  "entryPointStrategy": "resolve",
+  "tsconfig": "tsconfig.json",
+  "plugin": ["typedoc-plugin-markdown", "./plugin.mjs"],
+  "readme": "none",
+  "disableGit": true,
+  "disableSources": true,
+  "treatWarningsAsErrors": true,
+  "fileExtension": ".md",
+  "entryFileName": "index",
+  "router": "member",
+  "expandParameters": true,
+  "expandObjects": true,
+  "useCodeBlocks": false,
+  "theme": "contract-markdown",
+  "hidePageHeader": true,
+  "hideBreadcrumbs": true,
+  "hidePageTitle": false,
+  "includeVersion": true
+}

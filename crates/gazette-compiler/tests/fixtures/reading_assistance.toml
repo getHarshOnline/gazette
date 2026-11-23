@@ -1,0 +1,10 @@
+[composition.chrome.reading_assistance]
+label = 'Ask about this passage'
+prompt_template = 'Explain {selection} from {article_title} ({article_url}) on {site_name} ({site_url}). Section: {section_title}. Nearby context: {context}'
+selection_limit = 4096
+context_limit = 1024
+[[composition.chrome.reading_assistance.providers]]
+id = 'assistant:chosen'
+label = 'Ask a chosen assistant'
+endpoint = 'https://assistant.example/new?mode=reading'
+query_parameter = 'prompt'

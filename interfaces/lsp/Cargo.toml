@@ -1,0 +1,23 @@
+[package]
+name = "gazette-lsp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Language server that gives editors Gazette's diagnostics, symbols and navigation."
+
+[lints]
+workspace = true
+
+[dependencies]
+base64.workspace = true
+gazette-sdk = { workspace = true, features = ["authoring", "native-configuration"] }
+serde.workspace = true
+serde_json.workspace = true
+lsp-server = "=0.10.0"
+lsp-types = "=0.97.0"
+url.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

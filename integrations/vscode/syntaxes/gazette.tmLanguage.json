@@ -1,0 +1,60 @@
+{
+  "scopeName": "source.gazette.toml",
+  "name": "Gazette TOML",
+  "patterns": [
+    {
+      "name": "comment.line.number-sign.gazette",
+      "match": "#.*$"
+    },
+    {
+      "name": "entity.name.section.gazette",
+      "match": "^\\s*\\[\\[?[^\\]\\r\\n]+\\]\\]?"
+    },
+    {
+      "name": "string.quoted.triple.gazette",
+      "begin": "\"\"\"",
+      "end": "\"\"\""
+    },
+    {
+      "name": "string.quoted.triple.literal.gazette",
+      "begin": "'''",
+      "end": "'''"
+    },
+    {
+      "name": "string.quoted.double.gazette",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.gazette",
+          "match": "\\\\."
+        }
+      ]
+    },
+    {
+      "name": "string.quoted.single.gazette",
+      "begin": "'",
+      "end": "'"
+    },
+    {
+      "name": "variable.other.property.gazette",
+      "match": "[A-Za-z0-9_-]+(?=\\s*=)"
+    },
+    {
+      "name": "constant.language.gazette",
+      "match": "\\b(?:true|false)\\b"
+    },
+    {
+      "name": "constant.numeric.gazette",
+      "match": "(?<![\\w])[-+]?(?:[0-9][0-9_]*)(?:\\.[0-9_]+)?(?:[eE][-+]?[0-9_]+)?\\b"
+    },
+    {
+      "name": "keyword.operator.assignment.gazette",
+      "match": "="
+    },
+    {
+      "name": "punctuation.definition.gazette",
+      "match": "[{}\\[\\],]"
+    }
+  ]
+}
