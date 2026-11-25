@@ -317,7 +317,7 @@ pub(super) fn extend_llms(
             .map_err(|_| invalid("documentation index requires a safe public address"))?
             .unwrap_or(canonical);
         pages.push(documentation_page(
-            "Full developer documentation index".to_owned(),
+            "Developer documentation reading guide".to_owned(),
             index,
         ));
         document.sections.push(LlmsReadingSection {

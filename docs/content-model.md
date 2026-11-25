@@ -225,6 +225,8 @@ For Docs, configure `documentation_repository.public_base_url` beside the existi
 
 Landing-owned facts cannot repeat `resources.code_documentation`; the configured manual owns that address. A full inline workspace project may retain an explicit external Docs URL for compatibility, but it must agree when a configured module also supplies one. See [the manual target](mintlify.md) for manual selection and assembly.
 
+`project.source.license_url` and optional `project.source.notice_url` supply the public licence and notices in the resolved project resources. Themes can link to them alongside the repository and help. Gazette does not infer a notices path from a repository address.
+
 ## Resolve pages against the workspace {#workspace-and-projection-consumers}
 
 Call `Compilation::resolve_content` after supplying the authored graph. It checks the home site for each node, every declared project and each direct attribution. A principal reference must name a principal, even when a site, project or brand uses a similar key.

@@ -517,6 +517,7 @@ fn fragment(
         .and_then(|span| state.bindings.components.get(&span))
         .is_some_and(|binding| binding.presentation_only);
     let mut link_destinations = Vec::new();
+    let mut images = Vec::new();
     for node in root.descendants() {
         state.work.set(
             state
@@ -525,15 +526,27 @@ fn fragment(
                 .checked_sub(1)
                 .ok_or(Error::Limit("component rendering work"))?,
         );
-        if presentation_only
-            && matches!(
-                node.data().value,
-                NodeValue::Link(_) | NodeValue::WikiLink(_)
-            )
-        {
-            let span = state.lines.location(node.data().sourcepos)?.span;
-            let binding = state.bindings.links.get(&span).ok_or(Error::InvalidPlan)?;
-            link_destinations.push(binding.destination.clone());
+        match node.data().value {
+            NodeValue::Link(_) | NodeValue::WikiLink(_) if presentation_only => {
+                let span = state.lines.location(node.data().sourcepos)?.span;
+                let binding = state.bindings.links.get(&span).ok_or(Error::InvalidPlan)?;
+                link_destinations.push(binding.destination.clone());
+            }
+            NodeValue::Image(_) if state.suppress.is_some() => {
+                let span = state.lines.location(node.data().sourcepos)?.span;
+                if let Some(binding) = state.bindings.links.get(&span) {
+                    images.push(gazette_core::markdown::FragmentImage {
+                        address: binding.image_address.clone(),
+                        width: binding.image_dimensions.map(|size| size.width),
+                        height: binding.image_dimensions.map(|size| size.height),
+                        url: binding.destination.clone(),
+                        alt: binding.occurrence.image_alt.clone().unwrap_or_default(),
+                        loading: binding.image_loading,
+                        fetch_priority: binding.image_fetch_priority,
+                    });
+                }
+            }
+            _ => {}
         }
     }
     let mut output = Output::new(state.limits.output_bytes);
@@ -590,6 +603,7 @@ fn fragment(
     Ok(Fragment {
         html: output.value,
         link_destinations,
+        images,
         text: inspect::text_filtered(
             root,
             state.limits.output_bytes,

@@ -66,13 +66,7 @@ The six publications use separate repositories and Themes. [Base](https://github
 
 ## Previews
 
-Six publications designed for Gazette, each with its own Theme. These are their accepted designs; none is live yet.
-
-|  |  |
-| --- | --- |
-| ![getHarsh Home](docs/images/previews/getharsh.png) | ![RawThoughts Home](docs/images/previews/rawthoughts.png) |
-| ![Causality Home](docs/images/previews/causality.png) | ![Post-AGI Economics Home](docs/images/previews/post-agi.png) |
-| ![Sleepwalker Home](docs/images/previews/sleepwalker.png) | ![DAO Studio Home](docs/images/previews/dao-studio.png) |
+[See six live publications built with Gazette](docs/previews.md), each with its own Theme.
 
 ## Publishing
 
@@ -106,7 +100,7 @@ The [developer guide](docs/README.md) connects the integration guides and exact 
 
 Rust API documentation stays with its items. Public operations describe the inputs, effects, limits and errors a caller needs to handle. Documentation lints check those contracts and their links. The release job generates dependency notices and the source inventory from the locked inputs. Run `python3 tools/generate_distribution_evidence.py --check` to validate those inputs without writing files, or pass `--output-root` to prepare a release or temporary directory. The [distribution guide](docs/install.md#generate-distribution-notices) explains the output and its limits.
 
-The portable and release workflows are configured for Linux x86-64 and macOS arm64. They still need their first hosted run; local checks do not establish that result. The release workflow packages binaries, documentation and browser modules, with checksums and a separate binary SBOM. Neither workflow publishes a website.
+The portable and release workflows are configured for Linux x86-64 and macOS arm64. See [Actions](https://github.com/getHarshOnline/gazette/actions) for hosted results. The release workflow packages binaries, documentation and browser modules, with checksums and a separate binary SBOM. Neither workflow publishes a website.
 
 ## Licence
 

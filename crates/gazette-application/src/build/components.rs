@@ -39,6 +39,7 @@ struct Body<'a> {
     html: &'a str,
     text: &'a str,
     link_destinations: &'a [String],
+    images: &'a [gazette_core::markdown::FragmentImage],
 }
 
 impl ComponentRenderer for CompiledTheme {
@@ -78,6 +79,7 @@ impl ComponentRenderer for CompiledTheme {
                     html: &body.html,
                     text: &body.text,
                     link_destinations: &body.link_destinations,
+                    images: &body.images,
                 },
                 excerpt,
             },

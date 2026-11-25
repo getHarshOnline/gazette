@@ -25,6 +25,7 @@ use super::{
 };
 
 mod json_ld;
+mod page_cache;
 use json_ld::SiteJsonLd;
 
 pub(super) struct SiteRenderContext<'services, 'page> {
@@ -666,6 +667,16 @@ impl CompiledTheme {
                 super::presentation::DiscoveryKind::Llms,
                 &path,
                 "text/plain",
+            )?);
+        }
+
+        let cache = selection.publication().machine.page_cache;
+        if cache.is_some_and(|policy| !policy.retire) {
+            let path = page_cache::path()?;
+            output_discovery.push(discovery_record(
+                super::presentation::DiscoveryKind::PageCache,
+                &path,
+                "application/json",
             )?);
         }
 
@@ -1405,6 +1416,24 @@ impl CompiledTheme {
             {
                 inventory_file(&mut reservations, &mut parents, path.clone(), marker)?;
             }
+        }
+        if let Some(policy) = cache {
+            let path = page_cache::path()?;
+            let bytes = page_cache::descriptor(
+                &selection,
+                &discovery,
+                &files,
+                policy,
+                usize::try_from(builder.file_ceiling()).unwrap_or(usize::MAX),
+            )?;
+            insert(
+                &mut builder,
+                &mut directories,
+                &mut files,
+                path.clone(),
+                bytes,
+            )?;
+            media_types.insert(path, MediaType::Json);
         }
         let output =
             CapturedSource::from_parts(builder.finish(), files).map_err(SiteRenderError::Output)?;

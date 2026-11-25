@@ -172,6 +172,7 @@ pub(crate) fn usage(
             &mut robots,
             usage.crawlers.iter().copied(),
             sitemap.as_deref(),
+            Some(&usage.terms_url),
         )
         .map_err(|_| crate::invalid("robots.txt", "crawler rules exceed target byte limit"))?;
         output.add_owned("robots.txt", robots.finish())?;

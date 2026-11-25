@@ -304,6 +304,17 @@ impl DocumentationAssembly<'_> {
     pub fn catalog_capture(&self) -> Option<Arc<DocumentationCatalog>> {
         self.catalog.clone()
     }
+    /// Provider reading routes with known fragment IDs, keyed by extensionless path.
+    /// Absent adapters and unqualified anchors stay distinct from empty inventories.
+    pub fn reading_routes(&self) -> Option<BTreeMap<&EntryPath, Option<&BTreeSet<String>>>> {
+        self.catalog().map(|catalog| {
+            catalog
+                .entries()
+                .iter()
+                .map(|entry| (&entry.page.route, entry.page.anchors.as_ref()))
+                .collect()
+        })
+    }
 }
 impl AcquiredInputs {
     /// Retained documentation pages explicitly installed for this publication.

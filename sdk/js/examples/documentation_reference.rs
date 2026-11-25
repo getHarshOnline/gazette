@@ -36,6 +36,7 @@ fn assemble(request: &Request) -> Value {
         unselected_manual_pages: assembly.unselected_manual_pages(),
         unselected_manual_pages_incomplete: assembly.unselected_manual_pages_incomplete(),
         artifacts: assembly.artifacts(),
+        reading_routes: assembly.reading_routes(),
         inventory: assembly.output().inventory(),
         directory: None,
         jobs: &[],

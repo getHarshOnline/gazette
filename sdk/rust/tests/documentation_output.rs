@@ -257,6 +257,12 @@ fn shared_workspace_selection_exposes_retained_assembly_without_inventing_native
                 ));
                 assert_eq!(assembly.brand().as_str(), "brand:one");
                 assert!(
+                    report.reading_routes.as_ref().is_some_and(|routes| routes
+                        .keys()
+                        .any(|route| route.as_str() == "manual/start")),
+                    "native report exposes the retained provider route"
+                );
+                assert!(
                     assembly
                         .output()
                         .file(&"manual/start.md".parse().expect("output entry"))
@@ -329,7 +335,7 @@ fn publication_reservation_and_crawler_rules_reach_the_documentation_target() {
         };
         assert_eq!(
             file("robots.txt"),
-            "User-agent: *\nAllow: /\n\nUser-agent: TrainingBot\nDisallow: /\n\nSitemap: https://docs.example.test/sitemap.xml\n"
+            "# Terms of use: https://site.example.test/terms/\n\nUser-agent: *\nAllow: /\n\nUser-agent: TrainingBot\nDisallow: /\n\nSitemap: https://docs.example.test/sitemap.xml\n"
         );
         assert_eq!(
             file(".well-known/tdmrep.json"),
@@ -1374,6 +1380,7 @@ fn shared_report_schema_matches_native_fields_nulls_and_omission_rules() {
         },
         repository: &repository,
         artifacts: &artifacts,
+        reading_routes: None,
         manual: &[],
         unselected_manual_pages: BTreeMap::new(),
         unselected_manual_pages_incomplete: BTreeMap::new(),

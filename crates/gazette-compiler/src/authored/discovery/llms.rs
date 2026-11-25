@@ -1,7 +1,10 @@
 //! Curated Markdown entrypoints from explicit selected content, never a second sitemap.
 
 use super::{Discovery, RoutedPage, SitePages, SitePagesError, bounded, escaped, plain};
-use gazette_core::publication::Key;
+use gazette_core::publication::{
+    Key, Visibility,
+    content::{CollectionPurpose, ContentKind},
+};
 use std::io::{self, Write};
 
 use crate::{
@@ -328,7 +331,7 @@ impl SitePages<'_> {
                 let pages = navigation
                     .value()
                     .iter()
-                    .filter(|item| seen.insert(&item.destination))
+                    .filter(|item| seen.insert(item.destination.clone()))
                     .map(|item| {
                         self.curated_page(discovery, &item.destination)
                             .and_then(entry)
@@ -343,6 +346,63 @@ impl SitePages<'_> {
                     title: "Start here".to_owned(),
                     pages,
                 });
+                let projects = self.owner.projects();
+                let mut work = Vec::new();
+                for project in projects.filter(|project| project.visibility == Visibility::Public) {
+                    let Some(id) = project
+                        .resources
+                        .as_ref()
+                        .and_then(|resources| resources.landing.as_ref())
+                    else {
+                        continue;
+                    };
+                    let Ok(page) = self.curated_page(discovery, id) else {
+                        continue;
+                    };
+                    if seen.insert(id.clone()) {
+                        let mut page = entry(page)?;
+                        if let Some(name) = &project.name {
+                            page.title.clone_from(name);
+                        }
+                        work.push(page);
+                    }
+                }
+                if !work.is_empty() {
+                    model.sections.push(LlmsReadingSection {
+                        title: "Projects and products".to_owned(),
+                        pages: work,
+                    });
+                }
+                for (title, selected) in [("Collections", true), ("Reading journeys", false)] {
+                    let pages = self
+                        .pages
+                        .iter()
+                        .filter(|page| {
+                            let editorial = matches!(
+                                page.node.structure,
+                                ContentKind::Collection {
+                                    parent: None,
+                                    purpose: None | Some(CollectionPurpose::Editorial),
+                                    ..
+                                }
+                            );
+                            let journey =
+                                matches!(page.node.structure, ContentKind::Journey { .. })
+                                    && !self.owner.graph().is_documentation(&page.node.id);
+                            (if selected { editorial } else { journey })
+                                && discovery.includes_navigation_node(page.node)
+                        })
+                        .filter_map(|page| self.curated_page(discovery, &page.node.id).ok())
+                        .filter(|page| seen.insert(page.node.id.clone()))
+                        .map(entry)
+                        .collect::<Result<Vec<_>, _>>()?;
+                    if !pages.is_empty() {
+                        model.sections.push(LlmsReadingSection {
+                            title: title.to_owned(),
+                            pages,
+                        });
+                    }
+                }
             }
             LlmsCoverage::AllPages => {
                 if !configuration.sections.is_empty() {

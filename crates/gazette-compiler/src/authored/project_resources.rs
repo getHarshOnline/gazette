@@ -309,6 +309,7 @@ impl ResolvedAuthored<'_, '_> {
             Url(&'a str),
         }
         let mut actions = Vec::new();
+        let code = project.source.as_ref();
         for (kind, target) in [
             (
                 ProjectResourceKind::CodeDocumentation,
@@ -324,6 +325,15 @@ impl ResolvedAuthored<'_, '_> {
                     .repository
                     .as_deref()
                     .or(resources.github.as_deref())
+                    .map(Target::Url),
+            ),
+            (
+                ProjectResourceKind::License,
+                code.map(|source| Target::Url(&source.license_url)),
+            ),
+            (
+                ProjectResourceKind::Notice,
+                code.and_then(|source| source.notice_url.as_deref())
                     .map(Target::Url),
             ),
             (

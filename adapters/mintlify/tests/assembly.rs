@@ -226,7 +226,7 @@ fn publication_reservation_reaches_the_docs_host_and_telemetry_is_explicit() {
         } else {
             assert_eq!(
                 file(&output, "robots.txt").unwrap(),
-                "User-agent: *\nAllow: /\n\nUser-agent: TrainingBot\nDisallow: /\n\nSitemap: https://docs.example.test/sitemap.xml\n"
+                "# Terms of use: https://site.example.test/terms/\n\nUser-agent: *\nAllow: /\n\nUser-agent: TrainingBot\nDisallow: /\n\nSitemap: https://docs.example.test/sitemap.xml\n"
             );
         }
     }

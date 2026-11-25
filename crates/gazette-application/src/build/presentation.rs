@@ -93,6 +93,8 @@ pub(super) enum DiscoveryKind {
     WebManifest,
     Sitemap,
     Llms,
+    /// Disposable browser reading-cache descriptor for this publication.
+    PageCache,
     /// The site's terms page, present when it reserves text and data mining rights.
     TdmPolicy,
 }

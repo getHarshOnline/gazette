@@ -142,6 +142,9 @@ pub struct Project {
 pub struct ProjectSource {
     /// Public repository document explaining the applicable software licence.
     pub license_url: String,
+    /// Public repository notices that accompany the licence.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub notice_url: Option<String>,
     /// Public citation file for the source code.
     pub citation_url: String,
     /// Author credited by that file.

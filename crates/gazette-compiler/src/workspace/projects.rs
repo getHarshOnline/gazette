@@ -119,6 +119,10 @@ pub(super) fn validate_facts<'a>(
         if let Some(source) = &project.source
             && (project.repository.is_none()
                 || !valid_identity(&source.license_url)
+                || source
+                    .notice_url
+                    .as_ref()
+                    .is_some_and(|url| !valid_identity(url))
                 || !valid_identity(&source.citation_url))
         {
             report(

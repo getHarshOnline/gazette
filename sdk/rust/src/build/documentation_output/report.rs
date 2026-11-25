@@ -1,6 +1,7 @@
 //! Shared typed documentation reports and discovery schema.
 
 use super::*;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Closed native outcome vocabulary shared by every documentation transport.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, JsonSchema)]
@@ -34,6 +35,9 @@ pub struct Report<'a> {
         std::collections::BTreeMap<&'a crate::workspace::Key, &'a str>,
     /// Exact selected artifacts and any native generation evidence.
     pub artifacts: &'a [DocumentationArtifactEvidence<'a>],
+    /// Provider reading routes and qualified fragments from the validated catalog.
+    /// A null fragment inventory leaves that route's anchor evidence with the host.
+    pub reading_routes: Option<BTreeMap<&'a EntryPath, Option<&'a BTreeSet<String>>>>,
     /// Complete assembled output inventory.
     pub inventory: &'a crate::source::Inventory,
     /// Actual retained native target, when requested and successfully retained.
@@ -59,6 +63,7 @@ impl<'a> Report<'a> {
             unselected_manual_pages: assembled.unselected_manual_pages(),
             unselected_manual_pages_incomplete: assembled.unselected_manual_pages_incomplete(),
             artifacts: assembled.artifacts(),
+            reading_routes: assembled.reading_routes(),
             inventory: assembled.output().inventory(),
             directory,
             jobs,

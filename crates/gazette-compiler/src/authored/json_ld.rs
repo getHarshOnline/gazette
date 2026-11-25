@@ -620,7 +620,10 @@ impl Serialize for ProjectNode<'_> {
             let related: Vec<_> = resources
                 .actions
                 .iter()
-                .filter(|action| action.kind != gazette_core::markdown::ProjectResourceKind::Github)
+                .filter(|action| {
+                    use gazette_core::markdown::ProjectResourceKind::{Github, License, Notice};
+                    !matches!(action.kind, Github | License | Notice)
+                })
                 .map(|action| serde_json::json!({"@id":action.url}))
                 .collect();
             map.serialize_entry("subjectOf", &related)?;

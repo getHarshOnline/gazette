@@ -42,7 +42,7 @@ Check a complete configuration from Node and locate a field in its source.
 
 ::::
 
-[Publication previews](previews.md) show the accepted designs of six publications made for Gazette, each with its own Theme; none is live yet.
+[Publications built with Gazette](previews.md) shows six live sites and the Theme each uses.
 
 ## Extend Gazette
 

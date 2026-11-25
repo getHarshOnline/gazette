@@ -317,10 +317,13 @@ pub(crate) fn assemble(
     }
     let ignores = output.provider_ignores(&ignores)?;
     output.add_owned(".mintignore", ignores)?;
-    // Mintlify dev serves a supplied index but does not run the hosted index
-    // generator. Keep this derived input inside the existing private-preview
-    // boundary; ordinary target output must retain hosted auto-generation.
-    if config.preview_link_bases.is_some() {
+    if let Some(base) = config.public_base_url {
+        output.add_owned(
+            "llms.txt",
+            reading_guide(config.name, base.as_str(), projects)?,
+        )?;
+    } else if config.preview_link_bases.is_some() {
+        // A local, unaddressed project has no public guide or hosted export.
         let index = preview_index(config.name, &groups, projects, &output, markdown)?;
         output.add_owned("llms.txt", index)?;
     }
@@ -332,6 +335,70 @@ pub(crate) fn assemble(
         output,
         catalog: Some(catalog),
     })
+}
+
+fn reading_guide(name: &str, base: &str, projects: &[ProjectModule<'_>]) -> Result<Vec<u8>, Error> {
+    use std::io::Write;
+
+    let mut guide = crate::output::BoundedBuffer::new(10_000);
+    let limit = |_| {
+        invalid(
+            "llms.txt",
+            "documentation reading guide exceeds its byte budget",
+        )
+    };
+    let label = |value: &str| -> String {
+        value
+            .chars()
+            .flat_map(|character| match character {
+                '\r' | '\n' => [Some(' '), None],
+                '[' | ']' | '\\' => [Some('\\'), Some(character)],
+                _ => [Some(character), None],
+            })
+            .flatten()
+            .collect()
+    };
+    writeln!(
+        guide,
+        "# {}\n\n> Developer guides and reference for {}.",
+        label(name),
+        label(name)
+    )
+    .map_err(limit)?;
+    for project in projects {
+        let sections = project
+            .navigation
+            .iter()
+            .filter_map(|item| match item {
+                ProjectItem::Manual(section) => section.pages.first().map(|page| (section, page)),
+                ProjectItem::Reference(_) => None,
+            })
+            .peekable();
+        let mut sections = sections;
+        if sections.peek().is_none() {
+            continue;
+        }
+        writeln!(guide, "\n## {}\n", label(project.title)).map_err(limit)?;
+        for (section, page) in sections {
+            if section.title == page.title {
+                writeln!(guide, "- [{}](<{}{}>)", label(page.title), base, page.route)
+                    .map_err(limit)?;
+            } else {
+                writeln!(
+                    guide,
+                    "- [{}](<{}{}>): {}",
+                    label(page.title),
+                    base,
+                    page.route,
+                    label(section.title)
+                )
+                .map_err(limit)?;
+            }
+        }
+    }
+    writeln!(guide, "\n## Full documentation\n\n- [Full developer documentation](<{}llms-full.txt>): Complete guides and generated reference.", base)
+        .map_err(limit)?;
+    Ok(guide.finish())
 }
 
 fn preview_index(

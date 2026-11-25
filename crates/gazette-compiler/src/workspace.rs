@@ -102,7 +102,7 @@ mod taxonomies;
 pub use brands::{
     AlternateRelation, Brand, BrandPublication, DocumentationRepository, IdentityAssets,
     LlmsConfiguration, LlmsCoverage, LlmsRepresentation, LlmsSection, MachineOutputs,
-    MarkdownAlternates, MarkdownDirectoryPage, MarkdownFilePage, MarkdownMediaType,
+    MarkdownAlternates, MarkdownDirectoryPage, MarkdownFilePage, MarkdownMediaType, PageCache,
     PublicationContacts, SearchProfile, SocialProfile, TaxonomyPage,
 };
 pub use composition::{

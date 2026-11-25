@@ -24,6 +24,7 @@ pub(super) fn invalid(reason: &'static str) -> SiteRenderError {
 pub(super) fn robots(
     configuration: &RobotsConfiguration,
     sitemap: Option<&str>,
+    terms: Option<&str>,
     maximum: usize,
 ) -> Result<Vec<u8>, SiteRenderError> {
     let mut output = render::LimitedWriter::new(Vec::new(), maximum);
@@ -34,6 +35,7 @@ pub(super) fn robots(
             .iter()
             .map(gazette_compiler::workspace::CrawlerRule::group),
         sitemap,
+        terms,
     );
     if output.exceeded() {
         return Err(SiteRenderError::Render(render::Error::Limit(
@@ -180,7 +182,8 @@ pub(super) fn machine_outputs(
             .iter()
             .find(|item| matches!(item.kind, DiscoveryKind::Sitemap))
             .map(|item| item.url.as_str());
-        let bytes = robots(configuration, sitemap, output.maximum())?;
+        let terms = publication.terms_url();
+        let bytes = robots(configuration, sitemap, terms.as_deref(), output.maximum())?;
         output.insert(
             "robots.txt".parse().map_err(SiteRenderError::Output)?,
             bytes,

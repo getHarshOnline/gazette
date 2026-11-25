@@ -1,9 +1,9 @@
 # Publications designed for Gazette
 
-Six publications designed for Gazette, each with its own Theme. These are their accepted designs; none is live yet.
+These six publications are built with Gazette. Open a site from its Home preview.
 
 |  |  |
 | --- | --- |
-| ![getHarsh Home](images/previews/getharsh.png) | ![RawThoughts Home](images/previews/rawthoughts.png) |
-| ![Causality Home](images/previews/causality.png) | ![Post-AGI Economics Home](images/previews/post-agi.png) |
-| ![Sleepwalker Home](images/previews/sleepwalker.png) | ![DAO Studio Home](images/previews/dao-studio.png) |
+| [![getHarsh Home](images/previews/getharsh.png)](https://getharsh.in/) | [![RawThoughts Home](images/previews/rawthoughts.png)](https://rawthoughts.in/) |
+| [![Causality Home](images/previews/causality.png)](https://causality.in/) | [![Post-AGI Economics Home](images/previews/post-agi.png)](https://post-agi-economics.org/) |
+| [![Sleepwalker Home](images/previews/sleepwalker.png)](https://sleepwalker.in/) | [![DAO Studio Home](images/previews/dao-studio.png)](https://daostudio.in/) |

@@ -1,8 +1,8 @@
 //! Crawler rules and text and data mining reservations for every host a publication serves.
 //!
 //! The application writes these files for the authored site, and documentation targets
-//! write the same bytes for the publication's documentation host, so both hosts state one
-//! policy. The publication's workspace configuration supplies the rules and terms address.
+//! apply the same policy on the publication's documentation host. Each host keeps its own
+//! sitemap. The publication's workspace configuration supplies the rules and terms address.
 //! Callers choose file placement and enforce their own byte ceilings.
 //!
 //! These directives request behaviour from crawlers and miners; they restrict no access.
@@ -29,7 +29,7 @@ pub struct UsagePolicy<'a> {
     pub crawlers: Vec<CrawlerGroup<'a>>,
 }
 
-/// Write robots.txt groups, then an absolute `Sitemap` line when one exists.
+/// Write the Terms reference, crawler groups and the host’s sitemap when supplied.
 ///
 /// # Errors
 /// Returns the writer's error, including a caller's byte-ceiling refusal.
@@ -37,7 +37,11 @@ pub fn write_robots<'a>(
     output: &mut impl Write,
     groups: impl IntoIterator<Item = CrawlerGroup<'a>>,
     sitemap: Option<&str>,
+    terms: Option<&str>,
 ) -> io::Result<()> {
+    if let Some(terms) = terms {
+        writeln!(output, "# Terms of use: {terms}\n")?;
+    }
     for group in groups {
         writeln!(output, "User-agent: {}", group.user_agent)?;
         for path in group.allow {

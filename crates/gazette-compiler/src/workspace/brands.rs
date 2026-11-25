@@ -351,6 +351,9 @@ pub struct MachineOutputs {
         deserialize_with = "crate::tables::optional"
     )]
     pub llms: Option<LlmsConfiguration>,
+    /// Select bounded same-origin reading-page warming from the emitted inventory.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page_cache: Option<PageCache>,
     /// Emit `search.json` and expose the explicitly selected browser profile.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub search: Option<super::SearchConfiguration>,
@@ -368,6 +371,23 @@ pub struct MachineOutputs {
         deserialize_with = "crate::tables::optional"
     )]
     pub feeds: Option<super::Feeds>,
+}
+
+/// Limits for a publication's disposable browser reading cache.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PageCache {
+    /// Explicitly disable warming and retire earlier registrations at the same origin.
+    #[serde(default)]
+    pub retire: bool,
+    /// Maximum decoded response bytes in one eligible page.
+    pub page_bytes: u32,
+    /// Maximum transfer budget for a single warming pass.
+    pub warm_bytes: u32,
+    /// Maximum number of neighbouring pages warmed per foreground navigation.
+    pub warm_pages: u8,
+    /// Maximum total bytes retained per origin.
+    pub storage_bytes: u32,
 }
 
 /// One closed Markdown alternate routing and discovery profile.

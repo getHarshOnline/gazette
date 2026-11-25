@@ -74,6 +74,35 @@ fn parse(text: &str) -> ParsedCorpus<'_> {
 }
 
 #[test]
+fn project_resources_take_licence_and_notices_from_the_source_record() {
+    use gazette_core::markdown::ProjectResourceKind::{License, Notice};
+
+    let config = workspace::compile(&configuration(), Default::default()).unwrap();
+    let text = landing().replace(
+        "[content]",
+        "[project.source]\nlicense_url='https://code.test/one/LICENSE'\nnotice_url='https://code.test/one/NOTICE'\ncitation_url='https://code.test/one/CITATION.cff'\nauthor='person:publisher'\nrights_holder='person:publisher'\n[content]",
+    );
+    let corpus = parse(&text);
+    let resolved = authored::resolve(&config, &corpus, Default::default()).unwrap();
+    let actions = resolved
+        .project_resources_for(&key("content:one"))
+        .unwrap()
+        .unwrap()
+        .actions;
+    assert_eq!(
+        actions
+            .iter()
+            .filter(|action| matches!(action.kind, License | Notice))
+            .map(|action| (action.kind, action.url.as_str()))
+            .collect::<Vec<_>>(),
+        [
+            (License, "https://code.test/one/LICENSE"),
+            (Notice, "https://code.test/one/NOTICE"),
+        ]
+    );
+}
+
+#[test]
 fn retained_landing_owns_facts_and_an_unsaved_replacement_changes_the_same_catalog() {
     let config = workspace::compile(&configuration(), Default::default()).unwrap();
     assert!(config.workspace.project(&key("project:one")).is_none());

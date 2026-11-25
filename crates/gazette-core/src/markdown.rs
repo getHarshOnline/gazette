@@ -554,6 +554,25 @@ pub struct TransportedMarkdown {
     pub text: Option<String>,
 }
 
+/// A resolved image available to a component that provides its own markup.
+#[derive(Debug, PartialEq, Eq, Serialize)]
+pub struct FragmentImage {
+    /// Compiler-owned public image occurrence, when the image has one.
+    pub address: Option<String>,
+    /// Verified encoded width in pixels, when the image has one.
+    pub width: Option<u32>,
+    /// Verified encoded height in pixels, when the image has one.
+    pub height: Option<u32>,
+    /// Public URL resolved by the Markdown adapter.
+    pub url: String,
+    /// Alternative text from the authored image.
+    pub alt: String,
+    /// Authored loading preference, when supplied.
+    pub loading: Option<ImageLoading>,
+    /// Authored fetch priority, when supplied.
+    pub fetch_priority: Option<ImageFetchPriority>,
+}
+
 /// Human and machine projections from the same normalized emitted structure.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Fragment {
@@ -563,6 +582,8 @@ pub struct Fragment {
     pub text: String,
     /// Resolved link destinations for a presentation-only component, in body order.
     pub link_destinations: Vec<String>,
+    /// Admitted images in component body order.
+    pub images: Vec<FragmentImage>,
 }
 
 /// Full body and optional balanced prefix share one resolved plan.

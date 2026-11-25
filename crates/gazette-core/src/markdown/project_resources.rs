@@ -11,6 +11,10 @@ pub enum ProjectResourceKind {
     Learn,
     /// Explicit GitHub navigation destination, independent from repository completeness.
     Github,
+    /// The public source licence selected by the project.
+    License,
+    /// The public source notices selected by the project.
+    Notice,
     /// Native combined reference article index for this project.
     Mentions,
     /// Native article index for this project.
