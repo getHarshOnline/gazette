@@ -4,7 +4,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::Key;
-use gazette_core::resource::ResourceId;
+use gazette_core::{
+    publication::routing::{PublicBaseUrl, RoutePath},
+    resource::ResourceId,
+};
 
 /// A configured brand, not a legal entity, author or publisher by inference.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
@@ -81,6 +84,9 @@ pub struct BrandPublication {
     /// Public base and optional deployment prefix, independent of names/local paths.
     /// Absence is valid for local inspection; routed content requires this binding.
     pub public_base_url: Option<gazette_core::publication::routing::PublicBaseUrl>,
+    /// Released directory routes that lead to an independently published HTTPS site.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub external_redirects: BTreeMap<RoutePath, PublicBaseUrl>,
     /// Explicit local addressing coordinate; declaration never starts a listener.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub local_port: Option<std::num::NonZeroU16>,
@@ -208,6 +214,24 @@ pub(super) fn validate(brands: &BTreeMap<Key, Brand>, errors: &mut Vec<super::Di
                 brand.id.as_str(),
                 publication.site.as_str()
             );
+            for (path, target) in &publication.external_redirects {
+                if path.as_str() == "/"
+                    || !path.as_str().ends_with('/')
+                    || !target.as_str().starts_with("https://")
+                    || target.domain().is_none()
+                    || publication
+                        .public_base_url
+                        .as_ref()
+                        .is_none_or(|base| base.domain() == target.domain())
+                {
+                    report(
+                        errors,
+                        "workspace_external_redirect",
+                        &format!("{field}.external_redirects[{:?}]", path.as_str()),
+                        Some(&publication.site),
+                    );
+                }
+            }
             if let Some(routing) = &publication.routing {
                 for (name, prefix) in routing.prefixes() {
                     if prefix.is_some_and(|path| !path.as_str().ends_with('/')) {

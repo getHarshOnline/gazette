@@ -369,6 +369,12 @@ impl CompiledTheme {
                 mirror.node.id.clone(),
             ));
         }
+        let external_redirects = &selection.publication().external_redirects;
+        if !external_redirects.is_empty() && recipes.alias.is_none() {
+            return Err(SiteRenderError::AliasTemplateRequired(
+                self.evidence().site.clone(),
+            ));
+        }
         let mut files = BTreeMap::new();
         let mut media_types = BTreeMap::new();
         let mut builder = InventoryBuilder::new(options.limits);
@@ -1265,6 +1271,45 @@ impl CompiledTheme {
             mirror_presentation.feeds = &feed_discovery;
             mirror_presentation.discovery = &output_discovery;
             mirror_presentation.graph = graph_discovery.as_ref();
+            for (route, target) in external_redirects {
+                mirror_presentation.redirect_destination =
+                    Some(gazette_compiler::markdown::LinkDestination {
+                        kind: gazette_core::markdown::LinkDestinationKind::External,
+                        content: None,
+                        site: None,
+                        site_name: None,
+                        relationships: Vec::new(),
+                        presentation: None,
+                    });
+                let value = serde_json::json!({
+                    "route": { "canonical_url": target.as_str() }
+                });
+                let context = super::presentation::Presented {
+                    value: &value,
+                    presentation: &mirror_presentation,
+                };
+                let maximum = maximum_model.min(self.evidence().limits.context_bytes);
+                let (context, _) = super::serialization::context(
+                    serde_json::to_value(context).map_err(|error| {
+                        SiteRenderError::Render(render::Error::Context(Box::new(error)))
+                    })?,
+                    maximum,
+                    "external redirect model bytes",
+                )
+                .map_err(SiteRenderError::Render)?;
+                let html = self
+                    .render(template, &context)
+                    .map_err(SiteRenderError::Render)?;
+                let output = route.output().clone();
+                insert(
+                    &mut builder,
+                    &mut directories,
+                    &mut files,
+                    output.clone(),
+                    html,
+                )?;
+                media_types.insert(output, MediaType::Html);
+            }
             for selected in selection.mirrors() {
                 mirror_presentation.redirect_destination = Some(
                     authored

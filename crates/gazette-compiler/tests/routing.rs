@@ -71,6 +71,40 @@ fn assert_diagnostic(error: Error, code: &str) {
 }
 
 #[test]
+fn external_redirects_bind_released_directory_routes_to_independent_https_sites() {
+    let mut source = configuration(Some("https://alpha.example/"), None);
+    source.push_str("public_base_url='https://beta.example/'\n");
+    let with_redirect = |path, target| {
+        format!("{source}[brands.publications.external_redirects]\n'{path}'='{target}'\n")
+    };
+    let compiled = workspace::compile(
+        &with_redirect("/old/", "https://community.example/"),
+        toml::Limits::default(),
+    )
+    .expect("external publication redirect");
+    let redirects = &compiled
+        .workspace
+        .publication_for(&key("site:beta"))
+        .unwrap()
+        .external_redirects;
+    let (route, target) = redirects.first_key_value().unwrap();
+    assert_eq!(route.output().as_str(), "old/index.html");
+    assert_eq!(target.as_str(), "https://community.example/");
+
+    for (path, target) in [
+        ("/", "https://community.example/"),
+        ("/old", "https://community.example/"),
+        ("/old/", "http://community.example/"),
+        ("/old/", "https://beta.example/another/"),
+    ] {
+        assert!(
+            workspace::compile(&with_redirect(path, target), toml::Limits::default()).is_err(),
+            "{path} → {target}",
+        );
+    }
+}
+
+#[test]
 fn brand_base_subpath_and_explicit_route_feed_the_same_borrowed_page_record() {
     let source = configuration(Some("https://alpha.example/publication/"), None);
     let workspace = workspace::compile(&source, toml::Limits::default()).expect("workspace");

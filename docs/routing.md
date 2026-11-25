@@ -67,6 +67,17 @@ Rendering a mirror needs a configured alias template. Its `MirrorModel` has `con
 
 A site can render only mirrors. Search, feeds, sitemap, JSON-LD and `llms.txt` do not list those redirects as pages. Excluding the canonical object also excludes its mirrors. Check the deployed redirect separately from the local render.
 
+## Old routes to independent sites
+
+Set `external_redirects` on the publication whose old address readers still use:
+
+```toml
+[brands.publications.external_redirects]
+"/old-community/" = "https://community.example/"
+```
+
+The source is a directory route below the site root. The destination is an HTTPS directory on another DNS host. Gazette emits the selected alias template with the destination as its canonical and refresh target. The external destination has no content identity in the site's graph, search, feeds or sitemap. Output collisions fail the build. The host determines the HTTP status and slash handling.
+
 ## Syndicated bodies
 
 If you author a copy on another publication, declare the original by content ID:
