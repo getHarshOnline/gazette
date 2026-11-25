@@ -73,6 +73,7 @@ fn assemble(projects: &[ProjectModule<'_>], limits: Limits) -> Result<CapturedSo
             },
             projects,
             usage: None,
+            metadata: Default::default(),
         },
         limits,
     )

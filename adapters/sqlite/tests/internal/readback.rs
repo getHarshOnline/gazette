@@ -422,6 +422,7 @@ fn stale_generation_refuses_append_and_registry_replacement_preserves_history() 
     )
     .expect("real empty graph");
     let principal = Principal {
+        legal_name: None,
         id: "person:one".parse().expect("registry principal key"),
         kind: PrincipalKind::Person,
         name: Some("Exact principal".into()),

@@ -462,6 +462,7 @@ fn native_generation_retains_bytes_and_existing_target_assembles_two_modules_wit
         target: &target,
         projects: &projects,
         usage: None,
+        metadata: Default::default(),
     };
     let assembly = gazette_adapter_mintlify::Mintlify::new(&gazette_adapter_markdown::Comrak)
         .assemble(request(), Limits::default())
@@ -567,6 +568,7 @@ fn configured_markdown_output_uses_existing_native_capture_and_target_without_re
         target: &target,
         projects: &modules,
         usage: None,
+        metadata: Default::default(),
     };
     let adapter = gazette_adapter_mintlify::Mintlify::new(&gazette_adapter_markdown::Comrak);
     let first = adapter

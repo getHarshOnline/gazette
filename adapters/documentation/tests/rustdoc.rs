@@ -116,6 +116,7 @@ fn assemble(artifact: Artifact<'_>) -> Result<CapturedSource, gazette_core::docu
             target: &target,
             projects: &projects,
             usage: None,
+            metadata: Default::default(),
         },
         Limits::default(),
     )

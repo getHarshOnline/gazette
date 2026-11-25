@@ -36,6 +36,7 @@ fn assemble(
             target: &target,
             projects,
             usage: None,
+            metadata: Default::default(),
         },
         limits,
     )
@@ -113,6 +114,7 @@ fn configured_public_canonical_base_is_optional_and_never_replaced_by_preview_li
                         target: &target,
                         projects: &projects,
                         usage: None,
+                        metadata: Default::default(),
                     },
                     Limits::default(),
                 )
@@ -183,6 +185,7 @@ fn publication_reservation_reaches_the_docs_host_and_telemetry_is_explicit() {
                     target: &target,
                     projects: &projects,
                     usage,
+                    metadata: Default::default(),
                 },
                 Limits::default(),
             )
@@ -262,6 +265,7 @@ fn explicit_mode_colors_survive_target_assembly_and_reject_invalid_values() {
                     target: &target,
                     projects: &projects,
                     usage: None,
+                    metadata: Default::default(),
                 },
                 Limits::default(),
             );
@@ -972,5 +976,62 @@ fn retained_tree_selection_is_exact_without_copying_siblings_or_inventing_format
     assert_eq!(
         input.file(&sibling),
         Some(b"not a selected reference".as_slice())
+    );
+}
+
+#[test]
+fn documentation_identity_uses_the_declared_publisher_and_description() {
+    use gazette_core::documentation::{Publisher, SiteMetadata};
+    let input = Input::new(&fixture());
+    let projects = [project("library", &input)];
+    let public_base = "https://docs.example.test/".parse().unwrap();
+    let identity = "https://example.test/#organization";
+    let target: Target = serde_json::from_value(json!({
+        "kind": "mintlify", "theme": "mint", "primary_color": "#123abc"
+    }))
+    .unwrap();
+    let profiles = ["https://github.com/example-org".to_owned()];
+    let output = Mintlify::new(&gazette_adapter_markdown::Comrak)
+        .assemble(
+            Request {
+                name: "Library",
+                public_base_url: Some(&public_base),
+                target: &target,
+                projects: &projects,
+                usage: None,
+                metadata: SiteMetadata {
+                    description: Some("Build with the library and look up its API."),
+                    publisher: Some(Publisher {
+                        id: identity.into(),
+                        name: "Example",
+                        legal_name: Some("Example Private Limited"),
+                        url: "https://example.test/",
+                        same_as: &profiles,
+                    }),
+                },
+            },
+            Limits::default(),
+        )
+        .unwrap();
+    let docs = output.file(&"docs.json".parse().unwrap()).unwrap();
+    let config: Value = serde_json::from_slice(docs).unwrap();
+    assert_eq!(config["name"], "Library");
+    assert_eq!(
+        config["description"],
+        "Build with the library and look up its API."
+    );
+    assert_eq!(
+        config["seo"]["metatags"]["canonical"],
+        "https://docs.example.test"
+    );
+    assert_eq!(
+        config["seo"]["organization"],
+        json!({
+            "id": identity,
+            "name": "Example",
+            "legalName": "Example Private Limited",
+            "url": "https://example.test/",
+            "sameAs": profiles
+        })
     );
 }

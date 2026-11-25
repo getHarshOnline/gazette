@@ -127,6 +127,7 @@ impl DocumentationTarget for Mintlify<'_> {
                 dark_color: dark_color.as_deref(),
                 telemetry: *telemetry,
                 usage: request.usage,
+                metadata: &request.metadata,
                 preview_link_bases: self.preview_link_bases,
             },
             request.projects,

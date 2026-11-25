@@ -119,6 +119,7 @@ fn assemble(projects: &[ProjectModule<'_>]) -> Result<CapturedSource, Error> {
             },
             projects,
             usage: None,
+            metadata: Default::default(),
         },
         Limits::default(),
     )
@@ -289,6 +290,7 @@ fn fragment_navigation_is_target_owned_conditional_and_charged_to_tree_limits() 
                 },
                 projects: &[project(&tree)],
                 usage: None,
+                metadata: Default::default(),
             },
             Limits {
                 file_bytes: script.len() as u64 - 1,
@@ -673,6 +675,7 @@ fn local_manual_return_links_use_explicit_bases_without_rewriting_examples() {
                 },
                 projects: &[project(&manual)],
                 usage: None,
+                metadata: Default::default(),
             },
             Limits::default(),
         )

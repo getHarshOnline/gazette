@@ -14,6 +14,16 @@ pub enum PrincipalKind {
     Organization,
 }
 
+impl PrincipalKind {
+    /// Fragment used for this principal at its configured public website.
+    pub fn public_fragment(self) -> &'static str {
+        match self {
+            Self::Person => "person",
+            Self::Organization => "organization",
+        }
+    }
+}
+
 /// A reference to an independently owned identity, not an identity record.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(deny_unknown_fields)]
@@ -26,6 +36,9 @@ pub struct Principal {
     /// Omission never falls back to the key, an email address or another owner.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
+    /// Registered name, when the owner explicitly declares it for publication.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub legal_name: Option<String>,
     /// Explicit website destination, independent from publisher roles and contacts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub website: Option<PrincipalWebsite>,

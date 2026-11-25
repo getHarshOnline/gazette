@@ -603,6 +603,7 @@ fn replacing_derived_registry_preserves_pending_history() {
     )
     .expect("empty graph");
     let principal = Principal {
+        legal_name: None,
         id: "person:one".parse().expect("principal key"),
         kind: PrincipalKind::Person,
         name: None,

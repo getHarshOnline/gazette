@@ -205,6 +205,33 @@ pub struct ProjectModule<'a> {
     pub navigation: Vec<ProjectItem<'a>>,
 }
 
+/// Public identity of the organisation publishing a documentation site.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Publisher<'a> {
+    /// Stable entity identifier shared with the publisher's website.
+    pub id: String,
+    /// Principal's configured name.
+    pub name: &'a str,
+    /// Explicitly declared registered name.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub legal_name: Option<&'a str>,
+    /// Canonical publisher homepage.
+    pub url: &'a str,
+    /// Official profiles from the same principal declaration as the website.
+    #[serde(skip_serializing_if = "<[String]>::is_empty")]
+    pub same_as: &'a [String],
+}
+
+/// Site-wide reading and identity metadata, resolved without a provider account.
+#[derive(Default)]
+pub struct SiteMetadata<'a> {
+    /// Public overview of the selected manual collection.
+    pub description: Option<&'a str>,
+    /// Declared publisher with an organisation identity and a public website.
+    pub publisher: Option<Publisher<'a>>,
+}
+
 /// One resolved documentation publication; excludes native destinations and owner authority.
 pub struct Request<'a> {
     /// Borrowed brand display name, not another target-owned name setting.
@@ -217,6 +244,8 @@ pub struct Request<'a> {
     pub projects: &'a [ProjectModule<'a>],
     /// The owning publication's TDM reservation and crawler rules, when it reserves rights.
     pub usage: Option<&'a crate::publication::usage::UsagePolicy<'a>>,
+    /// Overview and publisher to carry into provider metadata.
+    pub metadata: SiteMetadata<'a>,
 }
 
 /// Target compatibility facts available before any native generator is invoked.

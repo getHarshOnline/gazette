@@ -44,6 +44,7 @@ fn assemble(inputs: &[Input], limits: Limits) -> Result<CapturedSource, Error> {
                 navigation,
             }],
             usage: None,
+            metadata: Default::default(),
         },
         limits,
     )

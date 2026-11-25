@@ -102,6 +102,7 @@ fn assemble_catalog(
                 })],
             }],
             usage: None,
+            metadata: Default::default(),
         },
         limits,
         gazette_core::documentation::CatalogLimits::default(),
@@ -323,6 +324,7 @@ fn authored_manual_links_close_against_public_sphinx_route_not_private_artifact_
                     },
                 ],
                 usage: None,
+                metadata: Default::default(),
             },
             Limits::default(),
         )
@@ -910,6 +912,7 @@ fn mixed_http_discovery_admits_only_selected_specification_and_keeps_sdk_artifac
                     ],
                 }],
                 usage: None,
+                metadata: Default::default(),
             },
             Limits::default(),
         )

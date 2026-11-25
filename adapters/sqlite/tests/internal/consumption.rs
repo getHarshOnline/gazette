@@ -496,6 +496,7 @@ fn replacing_derived_registry_preserves_consumed_intent_and_original_leases() {
     let mut previous = None;
     for name in ["First principal", "Revised principal"] {
         let principal = Principal {
+            legal_name: None,
             id: "person:one".parse().expect("principal key"),
             kind: PrincipalKind::Person,
             name: Some(name.into()),

@@ -67,6 +67,7 @@ fn v6_subject_heads_change_without_rewriting_rows_schema_or_journal_history() {
     let before = history(&connection);
     let header = writer.inspect().unwrap().header;
     let other = Principal {
+        legal_name: None,
         id: "person:other".parse().unwrap(),
         kind: PrincipalKind::Person,
         name: None,

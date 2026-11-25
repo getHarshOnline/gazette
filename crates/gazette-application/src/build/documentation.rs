@@ -232,6 +232,28 @@ fn usage_policy<'a>(
     }))
 }
 
+fn publisher_metadata<'a>(
+    workspace: &'a workspace::Workspace,
+    site: &Key,
+) -> Option<documentation::Publisher<'a>> {
+    use gazette_core::publication::{PrincipalKind, PrincipalWebsite};
+    let principal = workspace.principal(&workspace.site(site)?.publisher)?;
+    if principal.kind != PrincipalKind::Organization {
+        return None;
+    }
+    let url = match principal.website.as_ref()? {
+        PrincipalWebsite::Site { site } => workspace.public_base_url(site)?.as_str(),
+        PrincipalWebsite::External { url } => url.as_str(),
+    };
+    Some(documentation::Publisher {
+        id: format!("{url}#{}", principal.kind.public_fragment()),
+        name: principal.name.as_deref()?,
+        legal_name: principal.legal_name.as_deref(),
+        url,
+        same_as: &principal.same_as,
+    })
+}
+
 fn target_plan<'a>(brand: &'a Brand, build: &'a DocumentationBuild) -> documentation::Plan<'a> {
     documentation::Plan {
         name: &brand.name,
@@ -635,6 +657,10 @@ impl AcquiredInputs {
                     target: &build.target,
                     projects: &projects,
                     usage: usage.as_ref(),
+                    metadata: documentation::SiteMetadata {
+                        description: build.description.as_deref(),
+                        publisher: publisher_metadata(&self.compilation().workspace, self.site()),
+                    },
                 },
                 limits,
                 documentation::CatalogLimits::default(),

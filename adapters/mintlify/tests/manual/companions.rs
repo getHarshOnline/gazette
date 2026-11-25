@@ -127,6 +127,7 @@ fn discovered_companions_count_toward_the_complete_output_budget() {
                     },
                     projects: &[module],
                     usage: None,
+                    metadata: Default::default(),
                 },
                 limits,
             )

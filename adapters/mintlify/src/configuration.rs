@@ -55,6 +55,8 @@ struct Document<'a> {
     colors: Colors<'a>,
     name: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     seo: Option<Seo<'a>>,
     navigation: Navigation<'a>,
     theme: &'a str,
@@ -65,6 +67,8 @@ struct Document<'a> {
 #[derive(Serialize)]
 struct Seo<'a> {
     metatags: Metatags<'a>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    organization: Option<&'a gazette_core::documentation::Publisher<'a>>,
 }
 
 /// Global page metadata; Mintlify injects each entry into every page's head.
@@ -123,7 +127,11 @@ pub(crate) fn encode<'a>(
             dark: config.dark_color,
         },
         name: config.name,
-        seo: (config.public_base_url.is_some() || config.usage.is_some()).then(|| Seo {
+        description: config.metadata.description,
+        seo: (config.public_base_url.is_some()
+            || config.usage.is_some()
+            || config.metadata.publisher.is_some())
+        .then(|| Seo {
             metatags: Metatags {
                 canonical: config
                     .public_base_url
@@ -131,6 +139,7 @@ pub(crate) fn encode<'a>(
                 tdm_reservation: config.usage.map(|_| "1"),
                 tdm_policy: config.usage.map(|usage| usage.terms_url.as_str()),
             },
+            organization: config.metadata.publisher.as_ref(),
         }),
         navigation: if groups.len() > 1 {
             Navigation::Dropdowns {

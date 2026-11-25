@@ -40,6 +40,7 @@ fn site_rights_and_default_author_are_distinct_normalized_replayable_selections(
     let (root, mut writer) = fixture();
     let data = Data::new(true);
     let rights = Principal {
+        legal_name: None,
         id: "organization:rights".parse().expect("rights principal"),
         kind: PrincipalKind::Organization,
         name: Some("Explicit rights holder".into()),
@@ -47,6 +48,7 @@ fn site_rights_and_default_author_are_distinct_normalized_replayable_selections(
         same_as: Vec::new(),
     };
     let author = Principal {
+        legal_name: None,
         id: "person:default".parse().expect("default person"),
         kind: PrincipalKind::Person,
         name: Some("Explicit default author".into()),
@@ -259,6 +261,7 @@ fn distinct_roles_have_native_rows_identities_and_complete_set_removal() {
     let (root, mut writer) = fixture();
     let data = Data::new(false);
     let other = Principal {
+        legal_name: None,
         id: "organization:operator".parse().expect("principal key"),
         kind: PrincipalKind::Organization,
         name: None,

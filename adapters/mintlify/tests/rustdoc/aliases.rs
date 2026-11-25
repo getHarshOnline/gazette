@@ -172,6 +172,7 @@ fn installed_alias_links_use_the_nested_native_root_within_a_capture() {
                         })],
                     }],
                     usage: None,
+                    metadata: Default::default(),
                 },
                 Limits::default(),
             )

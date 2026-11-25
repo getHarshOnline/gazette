@@ -15,6 +15,9 @@ pub struct DocumentationBuild {
     /// Explicit supported target; the adapter owns detailed compatibility validation.
     #[serde(deserialize_with = "crate::tables::one")]
     pub target: Target,
+    /// Public overview of this manual collection.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     /// Navigation order is configured order, independent from source acquisition order.
     #[serde(default, deserialize_with = "crate::tables::many")]
     pub modules: Vec<DocumentationModule>,

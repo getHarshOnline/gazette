@@ -15,6 +15,7 @@ fn configuration(pages: Vec<Page>, ceiling: u64) -> Result<Vec<u8>, Error> {
             dark_color: None,
             telemetry: None,
             usage: None,
+            metadata: &Default::default(),
         },
         vec![Group {
             group: "Project",
@@ -111,6 +112,7 @@ fn multiple_projects_get_a_selector_with_their_exact_sections_and_routes() {
         dark_color: None,
         telemetry: None,
         usage: None,
+        metadata: &Default::default(),
     };
     let result = encode(
         &config,

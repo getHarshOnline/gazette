@@ -126,6 +126,7 @@ fn assemble_reference(
                     })],
                 }],
                 usage: None,
+                metadata: Default::default(),
             },
             Limits::default(),
             gazette_core::documentation::CatalogLimits::default(),

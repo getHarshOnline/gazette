@@ -485,14 +485,7 @@ impl<'a> PrincipalNode<'a> {
     /// document-local blank node.
     fn identity(&self) -> String {
         match self.1 {
-            Some(website) => format!(
-                "{}#{}",
-                website.identity_url,
-                match self.0.kind {
-                    PrincipalKind::Person => "person",
-                    PrincipalKind::Organization => "organization",
-                }
-            ),
+            Some(website) => format!("{}#{}", website.identity_url, self.0.kind.public_fragment()),
             None => format!(
                 "_:principal_{}",
                 Sha256Digest::of(self.0.id.as_str().as_bytes())

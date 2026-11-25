@@ -125,6 +125,7 @@ fn assemble(tree: &CapturedSource, selection: &Selection) -> CapturedSource {
                     })],
                 }],
                 usage: None,
+                metadata: Default::default(),
             },
             Limits::default(),
         )

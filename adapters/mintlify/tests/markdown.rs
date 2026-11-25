@@ -93,6 +93,7 @@ fn generated_reference_return_links_follow_mode_without_changing_code() {
                 target: &target,
                 projects: &modules,
                 usage: None,
+                metadata: Default::default(),
             },
             Limits::default(),
         )
@@ -239,6 +240,7 @@ fn with_navigation(
             },
             projects: &[project],
             usage: None,
+            metadata: Default::default(),
         },
         Limits::default(),
     )
@@ -554,6 +556,7 @@ fn assemble(inputs: &[(&str, &Input)], limits: Limits) -> Result<CapturedSource,
             },
             projects: &projects,
             usage: None,
+            metadata: Default::default(),
         },
         limits,
     )
@@ -740,6 +743,7 @@ fn the_private_index_uses_projected_titles_after_the_body_h1_becomes_an_anchor()
                     },
                     projects: &projects,
                     usage: None,
+                    metadata: Default::default(),
                 },
                 Limits::default(),
             )
@@ -1254,6 +1258,7 @@ fn markdown_adapter_navigation_accepts_qualified_roots_without_guessing_symbols(
                 },
                 projects: &projects,
                 usage: None,
+                metadata: Default::default(),
             },
             Limits::default(),
         )
@@ -1304,6 +1309,7 @@ fn markdown_adapter_navigation_accepts_qualified_roots_without_guessing_symbols(
                     },
                     projects: &projects[1..],
                     usage: None,
+                    metadata: Default::default(),
                 },
                 Limits::default(),
             )
@@ -1323,6 +1329,7 @@ fn markdown_adapter_navigation_accepts_qualified_roots_without_guessing_symbols(
                         },
                         projects: &projects,
                         usage: None,
+                        metadata: Default::default(),
                     },
                     Limits::default(),
                 )

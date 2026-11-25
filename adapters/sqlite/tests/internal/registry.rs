@@ -105,6 +105,7 @@ struct Data {
 impl Data {
     fn new(populated: bool) -> Self {
         let principal = Principal {
+            legal_name: None,
             id: "person:one".parse().expect("key"),
             kind: PrincipalKind::Person,
             name: Some("Exact principal".into()),

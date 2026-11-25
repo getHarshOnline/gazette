@@ -54,6 +54,7 @@ fn assemble(input: &Input, format: Format, limits: Limits) -> Result<CapturedSou
             },
             projects: &projects,
             usage: None,
+            metadata: Default::default(),
         },
         limits,
     )

@@ -161,6 +161,7 @@ fn assemble(artifact: Artifact<'_>) -> CapturedSource {
                 target: &target,
                 projects: &projects,
                 usage: None,
+                metadata: Default::default(),
             },
             Limits::default(),
         )

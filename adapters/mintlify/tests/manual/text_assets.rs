@@ -106,6 +106,7 @@ fn hidden_text_pages_stay_out_of_the_catalog() {
                 },
                 projects: &[text_project(&tree)],
                 usage: None,
+                metadata: Default::default(),
             },
             Limits::default(),
             gazette_core::documentation::CatalogLimits::default(),

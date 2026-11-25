@@ -30,6 +30,8 @@ pub(crate) struct Config<'a> {
     pub telemetry: Option<bool>,
     /// The owning publication's TDM reservation and crawler rules for this docs host.
     pub usage: Option<&'a gazette_core::publication::usage::UsagePolicy<'a>>,
+    /// Overview and identity supplied by the publication.
+    pub metadata: &'a gazette_core::documentation::SiteMetadata<'a>,
     /// Local preview hyperlink projection; never a public target setting.
     pub preview_link_bases: Option<&'a gazette_core::publication::routing::PreviewLinkBases>,
 }

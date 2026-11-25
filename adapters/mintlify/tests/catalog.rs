@@ -76,6 +76,7 @@ fn manual_catalog_uses_actual_reserved_route_and_admitted_text_without_changing_
         target: &target,
         projects: &projects,
         usage: None,
+        metadata: Default::default(),
     };
     let assembled = adapter
         .assemble_with_catalog(request(), Limits::default(), CatalogLimits::default())
@@ -151,6 +152,7 @@ fn typedoc_catalog_qualifies_only_its_actual_root_and_retains_artifact_proof() {
                 target: &target,
                 projects: &projects,
                 usage: None,
+                metadata: Default::default(),
             },
             Limits::default(),
             CatalogLimits::default(),
