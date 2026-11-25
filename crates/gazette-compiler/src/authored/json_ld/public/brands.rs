@@ -71,17 +71,8 @@ struct Project<'a, 'data>(&'a ProjectNode<'data>);
 
 impl Serialize for Project<'_, '_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut map = serializer.serialize_map(None)?;
-        map.serialize_entry("@id", &self.0.identity)?;
-        map.serialize_entry(
-            "@type",
-            crate::authored::public_identity::project_type(self.0.project.kind),
-        )?;
-        map.serialize_entry("identifier", &self.0.project.id)?;
-        if let Some(name) = &self.0.project.name {
-            map.serialize_entry("name", name)?;
-        }
-        map.end()
+        super::terms::ProjectIdentity::for_project(&self.0.identity, self.0.project)
+            .serialize(serializer)
     }
 }
 

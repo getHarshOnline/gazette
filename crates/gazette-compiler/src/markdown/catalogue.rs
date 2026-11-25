@@ -31,6 +31,9 @@ pub struct CatalogueItem {
     #[serde(skip)]
     #[schemars(skip)]
     pub(crate) kind: Option<&'static str>,
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub(crate) software: Option<gazette_core::publication::ProjectSoftware>,
 }
 
 fn encloses(outer: Span, inner: Span) -> bool {
@@ -87,6 +90,7 @@ pub(super) fn collect(
                         .and_then(|link| link.content.clone()),
                     identity: None,
                     kind: None,
+                    software: None,
                 });
             }
             _ => {}

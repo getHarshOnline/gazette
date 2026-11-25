@@ -3,9 +3,8 @@ r"""Check Gazette's locked dependencies against current advisory services.
 
 Run with Python 3.11 or later and already provisioned scanners. Exact scanner
 versions, service endpoints, selected dependency locks and expected digests
-come from tools/distribution-evidence.toml. The dependency-security workflow
-provisions scanners in runner-temporary roots, including the hash-locked
-Python scanner closure; this tool does not install or upgrade them.
+come from tools/distribution-evidence.toml. Provision the scanners locally,
+using tools/security/pip-audit-requirements.txt for the Python scanner closure.
 
 From the repository root, supply absolute scanner paths and an output directory
 outside the source checkout:
@@ -41,8 +40,8 @@ means only that these scanners reported no known finding for those exact inputs
 against the observed services. It proves neither absence of vulnerabilities nor
 native-library completeness, reachability, licence compatibility, legal approval
 or publication permission. The receipt is volatile evidence outside deterministic
-build and publication artifact identity. A workflow definition is not a completed
-hosted run: release qualification still requires its own reviewed receipt.
+build and publication artifact identity. Review the findings for the selected
+release inputs.
 
 Provider choices, limits and maintainer checks live in
 docs/maintain/dependencies.md, relative to this repository's root.

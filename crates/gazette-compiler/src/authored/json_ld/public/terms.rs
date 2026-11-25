@@ -2,25 +2,106 @@
 
 use super::{Described, IdentityUrl, PrincipalNode, Reference, Sequence};
 use crate::authored::{ClassificationView, PageData, ProjectView};
-use gazette_core::{publication::ProjectKind, source::Sha256Digest};
+use gazette_core::{
+    publication::{Key, ProjectKind, ProjectSoftware},
+    source::Sha256Digest,
+};
 use serde::{
     Serialize, Serializer,
     ser::{SerializeMap, SerializeSeq},
 };
 
+pub(super) struct SoftwareFields<'a>(&'a ProjectSoftware);
+
+impl<'a> From<&'a ProjectSoftware> for SoftwareFields<'a> {
+    fn from(software: &'a ProjectSoftware) -> Self {
+        Self(software)
+    }
+}
+
+impl SoftwareFields<'_> {
+    fn write_fields<S: SerializeMap>(&self, map: &mut S) -> Result<(), S::Error> {
+        map.serialize_entry("applicationCategory", &self.0.application_category)?;
+        if let Some(systems) = &self.0.operating_system {
+            map.serialize_entry("operatingSystem", systems)?;
+        }
+        Ok(())
+    }
+}
+
+impl Serialize for SoftwareFields<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(None)?;
+        self.write_fields(&mut map)?;
+        map.end()
+    }
+}
+
+pub(super) struct ProjectIdentity<'a> {
+    identity: &'a str,
+    kind: &'static str,
+    identifier: &'a Key,
+    name: Option<&'a str>,
+    software: Option<SoftwareFields<'a>>,
+}
+
+impl<'a> ProjectIdentity<'a> {
+    pub(super) fn new(
+        identity: &'a str,
+        identifier: &'a Key,
+        kind: Option<ProjectKind>,
+        name: Option<&'a str>,
+        software: Option<&'a ProjectSoftware>,
+    ) -> Self {
+        Self {
+            identity,
+            kind: crate::authored::public_identity::project_type(kind),
+            identifier,
+            name,
+            software: software.map(SoftwareFields::from),
+        }
+    }
+
+    pub(super) fn for_project(
+        identity: &'a str,
+        project: &'a gazette_core::publication::Project,
+    ) -> Self {
+        Self::new(
+            identity,
+            &project.id,
+            project.kind,
+            project.name.as_deref(),
+            project.software.as_ref(),
+        )
+    }
+
+    fn write_fields<S: SerializeMap>(&self, map: &mut S) -> Result<(), S::Error> {
+        map.serialize_entry("@id", self.identity)?;
+        map.serialize_entry("@type", self.kind)?;
+        map.serialize_entry("identifier", self.identifier)?;
+        if let Some(name) = self.name {
+            map.serialize_entry("name", name)?;
+        }
+        if let Some(software) = &self.software {
+            software.write_fields(map)?;
+        }
+        Ok(())
+    }
+}
+
+impl Serialize for ProjectIdentity<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(None)?;
+        self.write_fields(&mut map)?;
+        map.end()
+    }
+}
+
 pub(super) struct Project<'a, 'data>(pub(super) &'a ProjectView<'data>, pub(super) &'a Described);
 impl Serialize for Project<'_, '_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(None)?;
-        map.serialize_entry("@id", &self.0.identity)?;
-        map.serialize_entry("identifier", &self.0.project.id)?;
-        map.serialize_entry(
-            "@type",
-            crate::authored::public_identity::project_type(self.0.project.kind),
-        )?;
-        if let Some(name) = &self.0.project.name {
-            map.serialize_entry("name", name)?;
-        }
+        ProjectIdentity::for_project(&self.0.identity, self.0.project).write_fields(&mut map)?;
         if let Some(description) = self.0.description {
             map.serialize_entry("description", description)?;
         }

@@ -20,7 +20,7 @@ In particular, Rust wrapper metadata does not replace bundled native notices. `g
 
 ### Advisory checks
 
-Run `python3 tools/check_dependencies.py --help` for the [dependency checker's](../../tools/check_dependencies.py) provisioning requirements, network use, input checks, reports and failure behavior. The [dependency workflow](../../.github/workflows/dependency-security.yml) supplies the selected scanners. Obtain a fresh receipt for the exact release inputs; old scanner results do not qualify a changed lockfile. Check native upstream advisories as well as language-package databases: the [Git provider](#git-objects-and-native-library-selection) explains why a clean Rust scan can miss a native-library issue.
+Run `python3 tools/check_dependencies.py --help` for scanner versions, local provisioning and report formats. Read the advisories for the exact locks under review. Check native upstream advisories as well as language-package databases. The [Git provider](#git-objects-and-native-library-selection) explains why a clean Rust scan can miss a native-library issue.
 
 ## Fonts: reconstruct before inspecting
 
@@ -32,7 +32,7 @@ When changing either provider, run the [WOFF2 fixtures](../../adapters/fonts/tes
 
 ## Documentation generators and Swagger conversion
 
-External documentation generators are provisioned explicitly. The [portable workflow](../../.github/workflows/portable.yml) selects toolchains, consumes hash/integrity locks for Sphinx and TypeDoc, and builds gomarkdoc and go-swagger from the readonly Go module graph. The connected fixture remains download-free and disables Go network and toolchain fallback. It exercises Python/Sphinx, Rustdoc-compatible HTML, TypeScript/TypeDoc, Go/gomarkdoc and OpenAPI/Swagger in one publication assembly.
+Provision generators with the checked-in locks for Sphinx and TypeDoc and the readonly Go module graph for gomarkdoc and go-swagger. The connected fixture exercises those routes and Rustdoc in one publication assembly with Go network and toolchain fallback disabled.
 
 The runner binds regular executables using both their bytes and complete version output. Those same-run hashes detect selection changes; they are not an independent approval manifest. The reviewed locks establish source identity. Follow [generator maintenance](documentation-generators.md) for provisioning and the connected check, and [generator integration](../documentation-generators.md) for the runtime contract.
 

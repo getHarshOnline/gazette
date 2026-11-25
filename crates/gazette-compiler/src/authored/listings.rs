@@ -135,6 +135,9 @@ pub struct ListingSubject {
     /// Explicit subject kind; omission remains unknown.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub kind: Option<gazette_core::publication::ProjectKind>,
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub(crate) software: Option<gazette_core::publication::ProjectSoftware>,
     /// Explicit authored editorial-residence filter.
     pub residence: crate::workspace::ListingProjectResidence,
     /// Existing project identity.
@@ -255,12 +258,29 @@ impl ListingPage {
     }
 
     fn item_list_with(&self, public: bool) -> serde_json::Value {
-        let mut value = serde_json::json!({"@type": "ItemList", "numberOfItems": self.items.len(),
-                "itemListElement": self.items.iter().enumerate().map(|(index, item)|
-                    serde_json::json!({"@type":"ListItem", "position":index + 1,
-                        "item": if public { serde_json::json!({"@id":item.identity,"@type":item.work_type,"url":item.url,"identifier":item.id,"name":item.title}) }
-                        else { serde_json::json!({"@id":item.url,"identifier":item.id,"name":item.title}) }})
-                ).collect::<Vec<_>>(),
+        let items: Vec<_> = self
+            .items
+            .iter()
+            .enumerate()
+            .map(|(index, item)| {
+                let mut reference = serde_json::json!({
+                    "@id": if public { &item.identity } else { &item.url },
+                    "identifier": item.id,
+                    "name": item.title,
+                });
+                if public {
+                    reference["url"] = serde_json::json!(item.url);
+                    if let Some(kind) = super::public_identity::reference_type(&item.work_type) {
+                        reference["@type"] = serde_json::json!(kind);
+                    }
+                }
+                serde_json::json!({"@type": "ListItem", "position": index + 1, "item": reference})
+            })
+            .collect();
+        let mut value = serde_json::json!({
+            "@type": "ItemList",
+            "numberOfItems": items.len(),
+            "itemListElement": items,
         });
         if let Some(direction) = self.direction {
             value["itemListOrder"] = serde_json::json!(match direction {

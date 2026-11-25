@@ -420,9 +420,21 @@ fn reference<M: SerializeMap>(
     route: Option<&ResolvedRoute>,
     listing: bool,
 ) -> Result<(), M::Error> {
+    let kind = public_identity::work_type(node, false, listing);
+    work_reference_fields(map, node, route, Some(kind))
+}
+
+fn work_reference_fields<M: SerializeMap>(
+    map: &mut M,
+    node: &ContentNode,
+    route: Option<&ResolvedRoute>,
+    kind: Option<&str>,
+) -> Result<(), M::Error> {
     map.serialize_entry("@id", &public_identity::work(node, route, false))?;
     map.serialize_entry("identifier", &node.id)?;
-    map.serialize_entry("@type", public_identity::work_type(node, false, listing))?;
+    if let Some(kind) = kind {
+        map.serialize_entry("@type", kind)?;
+    }
     map.serialize_entry("name", &node.title)
 }
 
@@ -430,7 +442,13 @@ struct Content<'a>(&'a ContentNode, Option<&'a ResolvedRoute>, bool);
 impl Serialize for Content<'_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(None)?;
-        reference(&mut map, self.0, self.1, self.2)?;
+        let kind = public_identity::work_type(self.0, false, self.2);
+        work_reference_fields(
+            &mut map,
+            self.0,
+            self.1,
+            public_identity::reference_type(kind),
+        )?;
         if let Some(route) = self.1 {
             map.serialize_entry("url", &route.url)?;
         }
@@ -460,11 +478,16 @@ impl Serialize for PublicListingJsonLd<'_> {
         map.serialize_entry("url", &page.url)?;
         map.serialize_entry("mainEntity", &page.public_item_list())?;
         if let Some(subject) = &page.subject {
-            let mut entity = serde_json::json!({"@id":subject.identity,"@type":public_identity::project_type(subject.kind),"identifier":subject.project});
-            if let Some(name) = &subject.name {
-                entity["name"] = serde_json::json!(name);
-            }
-            map.serialize_entry("about", &entity)?;
+            map.serialize_entry(
+                "about",
+                &terms::ProjectIdentity::new(
+                    &subject.identity,
+                    &subject.project,
+                    subject.kind,
+                    subject.name.as_deref(),
+                    subject.software.as_ref(),
+                ),
+            )?;
             map.serialize_entry(
                 "relatedLink",
                 &Sequence(

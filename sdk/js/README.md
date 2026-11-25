@@ -149,4 +149,4 @@ cargo test --locked -p gazette-launcher --test delivery javascript:: -- --ignore
 cargo test --locked -p gazette-launcher --test publication_render js_qualification:: -- --ignored --test-threads=1
 ```
 
-The browser modules need no addon: `node --test sdk/js/tests/search.mjs sdk/js/tests/search-browse.mjs sdk/js/tests/analytics.mjs sdk/js/tests/webmcp.mjs`, with `GAZETTE_TEST_TYPESCRIPT` naming a `typescript.js` for the declaration checks. The portable workflow, `.github/workflows/portable.yml`, runs all of these.
+The browser modules need no addon: `node --test sdk/js/tests/search.mjs sdk/js/tests/search-browse.mjs sdk/js/tests/analytics.mjs sdk/js/tests/webmcp.mjs`, with `GAZETTE_TEST_TYPESCRIPT` naming a `typescript.js` for the declaration checks.

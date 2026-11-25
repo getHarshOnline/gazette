@@ -94,10 +94,10 @@ python3 tools/generate_distribution_evidence.py --check --output-root target/dis
 
 Local Cargo packages use their repository-relative manifest path, name and version for inventory identity. External packages retain their full Cargo source identifier, name and version, including Git revisions and distinct registries. Cargo's absolute local package IDs remain internal graph keys only. Moving the same checkout therefore preserves the inventory without merging packages from different homes or sources. [Cargo metadata](https://doc.rust-lang.org/cargo/commands/cargo-metadata.html) documents these fields. Exact upstream licence spellings remain in the notices and comments; only known legacy slash spellings are normalized in SPDX expressions.
 
-The portable workflow generates into the runner's temporary directory and checks that output. The tagged-release job packages freshly generated source notices and inventory alongside the executable, then attaches a separate binary SBOM and checksums.
+Package the freshly generated source notices and inventory alongside the executable. Record checksums and a separate binary SBOM for the files you distribute.
 
 ## Prepare a release binary
 
-The tagged-release workflow builds with `cargo auditable` on Linux and macOS. It remaps source paths beneath the build user's home to `/build-home`, then the checkout to `gazette`, so the more specific checkout mapping takes precedence. It also strips debug information, including linker entries that source-path remapping does not cover. Before assembling the archive, it rejects a binary containing either original path. This check covers those two literal prefixes; it does not establish that every embedded string is suitable for publication.
+Build the release executable with `cargo auditable build --release --locked --bin gazette` on each selected platform. Strip debug information. Remap source paths under the build user’s home to `/build-home`, then remap the checkout to `gazette` so the more specific path takes precedence. Before packaging, check that the binary contains neither original path.
 
-A local source build above does not apply these release settings. Run the workflow and check its actual release artifact before distributing it.
+Inspect the completed archive and check its contents and checksums before sharing it.

@@ -127,6 +127,9 @@ pub struct Project {
     /// Published credit and reference files for this project's code repository.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source: Option<ProjectSource>,
+    /// Public category and operating-system requirements of the application.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub software: Option<ProjectSoftware>,
     /// Published papers produced by this research, with their own identities.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub papers: Vec<ResearchPaper>,
@@ -147,6 +150,17 @@ pub struct Project {
     /// Explicit route through another publication, independent of lifecycle or deployment.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub available_through: Option<ProjectAvailability>,
+}
+
+/// Search and discovery facts declared by a software application's owner.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ProjectSoftware {
+    /// The category that describes what the application does.
+    pub application_category: String,
+    /// Supported operating systems as a public display value.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub operating_system: Option<String>,
 }
 
 /// Explicit publication facts for a code repository, separate from application credit.

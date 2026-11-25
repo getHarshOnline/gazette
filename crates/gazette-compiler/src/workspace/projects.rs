@@ -103,6 +103,21 @@ pub(super) fn validate_facts<'a>(
     errors: &mut Vec<Diagnostic>,
 ) {
     for project in projects {
+        if let Some(software) = &project.software
+            && (project.kind != Some(gazette_core::publication::ProjectKind::SoftwareApplication)
+                || software.application_category.trim().is_empty()
+                || software
+                    .operating_system
+                    .as_ref()
+                    .is_some_and(|system| system.trim().is_empty()))
+        {
+            report(
+                errors,
+                "workspace_project_software",
+                "projects.software",
+                Some(&project.id),
+            );
+        }
         let mut paper_urls = BTreeSet::new();
         if project.papers.iter().any(|paper| {
             paper.name.trim().is_empty()

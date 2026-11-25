@@ -61,6 +61,14 @@ pub(super) fn work_type(node: &ContentNode, page: bool, listing: bool) -> &'stat
     }
 }
 
+/// An article's metadata belongs to its canonical page. A reference carries its address and name.
+pub(super) fn reference_type(kind: &str) -> Option<&str> {
+    match kind {
+        "Article" | "BlogPosting" | "TechArticle" => None,
+        _ => Some(kind),
+    }
+}
+
 pub(crate) fn project(project: &Project, landing: Option<&ResolvedRoute>) -> String {
     project.identity.clone().unwrap_or_else(|| {
         landing.map_or_else(

@@ -31,6 +31,6 @@ For current advisory-check instructions, run `python3 tools/check_dependencies.p
 
 These maintenance chapters belong to the source checkout and are not selected as public developer-manual chapters. Keep source navigation here when adding one. Application integrations start in the [developer guide](docs/README.md).
 
-## Automated checks and release
+## Build and release checks
 
-The [portable workflow](.github/workflows/portable.yml) defines Linux and macOS build, test and integration checks; its selected provider jobs are separate from the default suite. The [dependency-security workflow](.github/workflows/dependency-security.yml) checks the locked dependency graphs. The [tagged-release workflow](.github/workflows/release.yml) reuses both gates and packages the matching version with generated notices, an auditable binary, inventory and checksums. Read the workflow for its current commands and tool versions. A configured job is not an observed run, and a successful local check is not hosted qualification or publisher approval.
+Use the [local build and test setup](docs/install.md) on Linux and macOS. Run the separate [provider fixtures](docs/maintain/documentation-generators.md) for changes to documentation generators. Read the advisory reports for the exact dependency locks and use the [binary preparation guide](docs/install.md#prepare-a-release-binary) when distributing a build.

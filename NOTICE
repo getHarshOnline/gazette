@@ -1,9 +1,8 @@
 Gazette
-Copyright © 2026 RawThoughts Enterprises Private Limited.
-Author and originator: Harsh Joshi.
+Copyright © 2026 RawThoughts Enterprises Private Limited (https://www.rtepl.co.in).
+Author and originator: Harsh Joshi (https://getharsh.in/).
 
-This repository declares Gazette 0.1.0 under
-AGPL-3.0-or-later in its root package manifest. See LICENSE for the complete
+Gazette is licensed under AGPL-3.0-or-later. See LICENSE for the complete
 licence text.
 
 The browser modules under sdk/js/search/, sdk/js/analytics/ and sdk/js/webmcp/

@@ -56,11 +56,26 @@ fn explicit_subject_kinds_do_not_change_lifecycle_or_infer_availability() {
                 |kind| format!("[project]\nkind='{kind}'"),
             ),
         );
+        let text = if kind == Some("software-application") {
+            text.replace(
+                "[content]",
+                "[project.software]\napplication_category='DeveloperApplication'\noperating_system='macOS, Linux'\n[content]",
+            )
+        } else {
+            text
+        };
         let corpus = parse(&text);
         let resolved = authored::resolve(&config, &corpus, Default::default()).unwrap();
         let value = public(&resolved, "content:one");
         let entity = &value["about"][0];
         assert_eq!(entity["@type"], expected);
+        if kind == Some("software-application") {
+            assert_eq!(entity["applicationCategory"], "DeveloperApplication");
+            assert_eq!(entity["operatingSystem"], "macOS, Linux");
+        } else {
+            assert!(entity.get("applicationCategory").is_none());
+            assert!(entity.get("operatingSystem").is_none());
+        }
         assert_eq!(entity["@id"], "https://one.test/one/#entity");
         assert_ne!(entity["@id"], value["@id"]);
         assert_eq!(entity["subjectOf"][0]["@id"], value["@id"]);
@@ -159,7 +174,9 @@ fn linked_article_is_the_actual_work_and_mentions_do_not_become_about() {
         if let Some(linked) = linked {
             assert_eq!(linked["@id"], target["@id"]);
             assert_eq!(linked["@id"], "https://one.test/help/guide/#article");
-            assert_eq!(linked["@type"], "Article");
+            assert!(linked.get("@type").is_none());
+            assert_eq!(target["@type"], "Article");
+            assert_eq!(target["headline"], linked["name"]);
             assert_ne!(linked["@id"], target["mainEntityOfPage"]["@id"]);
         }
         assert!(

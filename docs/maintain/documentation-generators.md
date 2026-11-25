@@ -30,9 +30,9 @@ A local macOS run passed with five configured projects and five separately gener
 
 Ordinary `cargo test` compiles these documentation-generator fixtures but does not run them. Real-generator qualification is an explicit `--ignored` test with caller-selected tools. A clean clone can therefore build and run its ordinary tests without Sphinx, TypeDoc, gomarkdoc or go-swagger, while release qualification still fails closed when a required selected generator is absent or mismatched.
 
-### Reproducible Ubuntu gate
+### Run the provider checks on Ubuntu
 
-The `ubuntu-24.04 generated documentation` job in [`portable.yml`](../../.github/workflows/portable.yml) provisions the five selected generator routes outside Gazette, then executes the same ignored fixture:
+Provision these tools on Ubuntu 24.04 for the connected fixture:
 
 - Python 3.13.7 plus Sphinx 8.2.3 and its complete hash-locked Python closure;
 - stable Rustdoc from Gazette's pinned Rust 1.94.0 toolchain;
@@ -40,11 +40,9 @@ The `ubuntu-24.04 generated documentation` job in [`portable.yml`](../../.github
 - Go 1.26.6 plus `gomarkdoc` 1.1.0;
 - Go 1.26.6 plus `go-swagger` 0.34.1 for OpenAPI/Swagger generation.
 
-The setup actions are exact commit pins. Python and npm installs consume the checked-in locks. Go builds consume the checked-in `go.mod`/`go.sum` graph with `-mod=readonly`, exact direct releases and the selected Go toolchain; transitive modules cannot float without a reviewed lock change. Network access is confined to that explicit CI provisioning phase. The [`qualify-linux-providers.sh`](../../adapters/documentation/tests/qualify-linux-providers.sh) runner performs no installation, download or `PATH` discovery. It accepts exact absolute regular files, records each selected executable's SHA-256, records the complete stdout SHA-256 of the exact version command under the same cleared environment used by the fixture, and passes those values into the native identity checks. The generated fixture itself disables Go network/toolchain fallback and uses isolated ephemeral caches.
+Use the checked-in Python and npm locks and build the Go tools with `-mod=readonly` against the checked-in `go.mod` and `go.sum`. Pass the exact executable paths to [the local provider runner](../../adapters/documentation/tests/qualify-linux-providers.sh). It records executable and version-output digests in the fixture’s cleared environment. The fixture uses isolated caches and disables Go network and toolchain fallback.
 
-These run-scoped digests bind selection and detect replacement between the CI provisioning boundary and Gazette's execution; they are not independent approval, self-approval or permanent generator admission. This CI wrapper intentionally has weaker provenance than the fixture's release-qualification mode where expected digests come from a separately retained, owner-accepted manifest. Here the reviewed action pins, toolchain selection and Python/npm/Go locks own reproducible provisioning, while the same-run digests prove only that Gazette consumed those selected bytes without a substitution. A successful job proves the bounded fixtures on that Ubuntu runner only. It does not claim arbitrary-project fidelity, Mintlify hosting compatibility, a GitHub push, a paid/free entitlement or public deployment.
-
-The Linux gate has not yet run on a hosted runner, and the macOS result does not stand in for Linux qualification.
+The recorded digests establish which tools that run used. Release qualification takes expected digests from an independently reviewed manifest. The connected check covers its selected fixture and platform.
 
 The shared target request carries the existing immutable `TreeInput`, selected file-or-directory selection and declared native format. Imported artifacts and freshly generated output use this same boundary; assembly no longer discards companions before a target can inspect them. Artifact evidence records the exact selection, native content metadata (file size/digest or directory kind), and complete retained tree identity. A directory has no invented file digest: its scope is bound by the selection and complete capture identity. Those are input evidence, not permission to publish every companion or proof that a directory-based format is supported. Generation staging reuses the same acquired-source projection instead of building a second tree-selection path. No generator rerun or native reread occurs during target assembly.
 

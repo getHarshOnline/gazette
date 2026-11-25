@@ -51,22 +51,15 @@ The compiler parses retained source bytes, resolves publication relationships an
 
 The application coordinates source reads, rendering, previews, storage and delivery. Ports describe the capabilities it needs, and adapters implement filesystem, Git, SQLite, Tera, processes and documentation conversion. The Rust SDK selects these implementations; the other interfaces expose its operations. The [architecture guide](docs/architecture.md) follows a title edit and a crossing through that flow, explains the tradeoffs and locates the code for extensions.
 
-## Code
-
-The six publications use separate repositories and Themes. [Base](https://github.com/getHarshOnline/gazette-theme-base) supplies their shared navigation, reading, search and controls; each Theme supplies its publication's presentation.
-
-| Publication repository | Theme repository |
-| --- | --- |
-| [getHarsh](https://github.com/getHarsh/getharsh.in) | [Chronicle](https://github.com/getHarshOnline/gazette-theme-chronicle) |
-| [RawThoughts](https://github.com/getHarshOnline/rawThoughts.in) | [Carrier](https://github.com/getHarshOnline/gazette-theme-carrier) |
-| [Causality](https://github.com/getHarshOnline/causality.in) | [Lattice](https://github.com/getHarshOnline/gazette-theme-lattice) |
-| [Post-AGI Economics](https://github.com/getHarshOnline/post-agi-economics.org) | [Folio](https://github.com/getHarshOnline/gazette-theme-folio) |
-| [Sleepwalker](https://github.com/getHarshOnline/sleepwalker.in) | [Nocturne](https://github.com/getHarshOnline/gazette-theme-nocturne) |
-| [DAO Studio](https://github.com/DAO-Studio/daostudio.in) | [Chassis](https://github.com/getHarshOnline/gazette-theme-chassis) |
-
 ## Previews
 
-[See six live publications built with Gazette](docs/previews.md), each with its own Theme.
+These six live publications share [Base](https://github.com/getHarshOnline/gazette-theme-base) for navigation, reading, search and controls. Each Theme gives its publication its own look. Select a preview to open the site.
+
+|  |  |
+| --- | --- |
+| [![getHarsh Home](https://raw.githubusercontent.com/getHarshOnline/gazette-theme-chronicle/main/docs/preview.gif)](https://getharsh.in/)<br>[Chronicle theme](https://github.com/getHarshOnline/gazette-theme-chronicle) · [getHarsh site repository](https://github.com/getHarsh/getharsh.in) | [![RawThoughts Home](https://raw.githubusercontent.com/getHarshOnline/gazette-theme-carrier/main/docs/preview.gif)](https://rawthoughts.in/)<br>[Carrier theme](https://github.com/getHarshOnline/gazette-theme-carrier) · [RawThoughts site repository](https://github.com/getHarshOnline/rawThoughts.in) |
+| [![Causality Home](https://raw.githubusercontent.com/getHarshOnline/gazette-theme-lattice/main/docs/preview.gif)](https://causality.in/)<br>[Lattice theme](https://github.com/getHarshOnline/gazette-theme-lattice) · [Causality site repository](https://github.com/getHarshOnline/causality.in) | [![Post-AGI Economics Home](https://raw.githubusercontent.com/getHarshOnline/gazette-theme-folio/main/docs/preview.gif)](https://post-agi-economics.org/)<br>[Folio theme](https://github.com/getHarshOnline/gazette-theme-folio) · [Post-AGI Economics site repository](https://github.com/getHarshOnline/post-agi-economics.org) |
+| [![Sleepwalker Home](https://raw.githubusercontent.com/getHarshOnline/gazette-theme-nocturne/main/docs/preview.gif)](https://sleepwalker.in/)<br>[Nocturne theme](https://github.com/getHarshOnline/gazette-theme-nocturne) · [Sleepwalker site repository](https://github.com/getHarshOnline/sleepwalker.in) | [![DAO Studio Home](https://raw.githubusercontent.com/getHarshOnline/gazette-theme-chassis/main/docs/preview.gif)](https://daostudio.in/)<br>[Chassis theme](https://github.com/getHarshOnline/gazette-theme-chassis) · [DAO Studio site repository](https://github.com/DAO-Studio/daostudio.in) |
 
 ## Publishing
 
@@ -98,9 +91,9 @@ The [developer guide](docs/README.md) connects the integration guides and exact 
 
 [Build and test setup](docs/install.md) lists the tool versions, executable paths and checks used by contributors. Tests live with their owning packages; architecture checks enforce the dependency boundaries. [Contributing](CONTRIBUTING.md) explains the development rules and leads to the maintenance chapters for dependencies, generators, MCP and VS Code.
 
-Rust API documentation stays with its items. Public operations describe the inputs, effects, limits and errors a caller needs to handle. Documentation lints check those contracts and their links. The release job generates dependency notices and the source inventory from the locked inputs. Run `python3 tools/generate_distribution_evidence.py --check` to validate those inputs without writing files, or pass `--output-root` to prepare a release or temporary directory. The [distribution guide](docs/install.md#generate-distribution-notices) explains the output and its limits.
+Rust API documentation stays with its items. Public operations describe the inputs, effects, limits and errors a caller needs to handle. Documentation lints check those contracts and their links. Run `python3 tools/generate_distribution_evidence.py --check` to validate those inputs without writing files, or pass `--output-root` to prepare a release or temporary directory. The [distribution guide](docs/install.md#generate-distribution-notices) explains the output and its limits.
 
-The portable and release workflows are configured for Linux x86-64 and macOS arm64. See [Actions](https://github.com/getHarshOnline/gazette/actions) for hosted results. The release workflow packages binaries, documentation and browser modules, with checksums and a separate binary SBOM. Neither workflow publishes a website.
+Build and test Gazette locally on Linux x86-64 or macOS arm64. Run `python3 tools/check_dependencies.py --help` to scan the locked dependency graphs with the documented tools. Review advisories with the release inputs.
 
 ## Licence
 

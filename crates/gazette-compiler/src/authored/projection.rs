@@ -1025,6 +1025,7 @@ impl ResolvedAuthored<'_, '_> {
             };
             item.identity = Some(identity);
             item.kind = Some(kind);
+            item.software = project.and_then(|project| project.software.clone());
         }
         let projects = graph
             .project_relations(id)

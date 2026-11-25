@@ -80,6 +80,10 @@ impl Serialize for Catalogue<'_> {
             identity: Option<&'a str>,
             #[serde(rename = "@type", skip_serializing_if = "Option::is_none")]
             kind: Option<&'a str>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            name: Option<&'a str>,
+            #[serde(flatten)]
+            software: Option<super::terms::SoftwareFields<'a>>,
         }
         #[derive(Serialize)]
         struct Item<'a> {
@@ -95,15 +99,23 @@ impl Serialize for Catalogue<'_> {
         map.serialize_entry("numberOfItems", &self.0.len())?;
         map.serialize_entry(
             "itemListElement",
-            &Sequence(self.0.iter().enumerate().map(|(index, entry)| Item {
-                kind: "ListItem",
-                position: index + 1,
-                name: &entry.title,
-                item: Link {
-                    url: &entry.url,
-                    identity: entry.identity.as_deref(),
-                    kind: entry.kind,
-                },
+            &Sequence(self.0.iter().enumerate().map(|(index, entry)| {
+                Item {
+                    kind: "ListItem",
+                    position: index + 1,
+                    name: &entry.title,
+                    item: Link {
+                        url: &entry.url,
+                        identity: entry.identity.as_deref(),
+                        kind: entry.kind.and_then(super::public_identity::reference_type),
+                        name: (entry.kind == Some("SoftwareApplication"))
+                            .then_some(entry.title.as_str()),
+                        software: entry
+                            .software
+                            .as_ref()
+                            .map(super::terms::SoftwareFields::from),
+                    },
+                }
             })),
         )?;
         map.end()

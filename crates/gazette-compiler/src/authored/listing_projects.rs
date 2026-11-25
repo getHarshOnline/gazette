@@ -131,6 +131,7 @@ impl ResolvedAuthored<'_, '_> {
         Ok(Some(ListingSubject {
             identity: super::public_identity::project(subject, Some(route)),
             kind: subject.kind,
+            software: subject.software.clone(),
             residence: *residence,
             explore,
             project: project.clone(),

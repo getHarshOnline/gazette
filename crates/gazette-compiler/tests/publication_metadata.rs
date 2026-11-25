@@ -270,7 +270,7 @@ fn brand_ownership_programmes_and_about_share_canonical_identities() {
             "home='content:two-home'\nabout='content:two-about'",
         )
         + "\n[[projects]]\nid='project:programme'\nname='Programme'\nkind='research-project'\nidentity='https://two.test/#programme'\nlifecycle='active'\nvisibility='public'\navailability='unavailable'\n\
-           [[projects]]\nid='project:tool'\nname='Tool'\nkind='software-application'\nidentity='https://two.test/#tool'\nlifecycle='active'\nvisibility='public'\navailability='unavailable'\n";
+           [[projects]]\nid='project:tool'\nname='Tool'\nkind='software-application'\nidentity='https://two.test/#tool'\nlifecycle='active'\nvisibility='public'\navailability='unavailable'\n[projects.software]\napplication_category='DeveloperApplication'\noperating_system='macOS, Linux'\n";
     let compiled = compilation(&config);
     let mut files = files();
     files.push((
@@ -308,6 +308,11 @@ fn brand_ownership_programmes_and_about_share_canonical_identities() {
             brand["http://purl.org/dc/terms/hasPart"][0]["@type"],
             "SoftwareApplication"
         );
+        let tool = &brand["http://purl.org/dc/terms/hasPart"][0];
+        assert_eq!(tool["applicationCategory"], "DeveloperApplication");
+        assert_eq!(tool["operatingSystem"], "macOS, Linux");
+        assert!(tool.get("offers").is_none());
+        assert!(tool.get("aggregateRating").is_none());
         let owner = graph.iter().find(|node| node["brand"].is_array()).unwrap();
         assert!(
             owner["brand"]
