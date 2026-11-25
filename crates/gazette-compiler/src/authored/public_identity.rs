@@ -45,12 +45,15 @@ pub(super) fn work_type(node: &ContentNode, page: bool, listing: bool) -> &'stat
             SchemaType::Article => "Article",
             SchemaType::BlogPosting => "BlogPosting",
             SchemaType::TechArticle => "TechArticle",
-            SchemaType::AboutPage => "Article",
+            SchemaType::AboutPage | SchemaType::ProfilePage => "Article",
         },
         ContentKind::Collection { .. } | ContentKind::Journey { .. } => "CollectionPage",
         ContentKind::Page {
             family: PageFamily::Index,
         } if listing => "CollectionPage",
+        ContentKind::Page {
+            family: PageFamily::Utility,
+        } if node.schema_type == Some(SchemaType::ProfilePage) => "ProfilePage",
         ContentKind::Page {
             family: PageFamily::Utility,
         } if node.schema_type == Some(SchemaType::AboutPage) => "AboutPage",
@@ -73,6 +76,7 @@ pub(super) fn project_type(kind: Option<ProjectKind>) -> &'static str {
         Some(ProjectKind::SoftwareApplication) => "SoftwareApplication",
         Some(ProjectKind::SoftwareSourceCode) => "SoftwareSourceCode",
         Some(ProjectKind::CreativeWork) => "CreativeWork",
+        Some(ProjectKind::Book) => "Book",
         Some(ProjectKind::Collection) => "Collection",
         Some(ProjectKind::Project) => "Project",
         Some(ProjectKind::ResearchProject) => "ResearchProject",

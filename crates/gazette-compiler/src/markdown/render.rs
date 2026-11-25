@@ -75,6 +75,13 @@ pub struct Opening<'a> {
 /// Ordering preserves source traversal; arguments are data, not inferred publication claims.
 #[derive(Debug, PartialEq, Eq, serde::Serialize, schemars::JsonSchema)]
 pub struct ComponentUse {
+    /// Destinations carried by an enabled authored invitation.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[schemars(default)]
+    pub actions: Vec<String>,
+    /// Primary destinations from the admitted headings of this authored catalogue.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub catalogue: Option<Vec<super::CatalogueItem>>,
     /// Questions and admitted answers from this declared FAQ group.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub faq: Option<super::Faq>,
@@ -99,6 +106,9 @@ pub struct LinkDestination {
     pub content: Option<Key>,
     /// Exact configured destination site, when known.
     pub site: Option<Key>,
+    /// Configured publication name for a cross-site reading link.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub site_name: Option<String>,
     /// Direct authored graph relation; ordinary Markdown contributes none.
     pub relationships: Vec<LinkRelationship>,
     /// Effective destination Theme/palette selected by the resolved workspace.
@@ -668,6 +678,7 @@ impl ParsedMarkdown<'_> {
                         kind: use_.kind,
                         content: use_.content.clone(),
                         site: use_.site.clone(),
+                        site_name: annotation.site_name,
                         relationships: use_.relationships.clone(),
                         theme: use_
                             .presentation
@@ -756,6 +767,10 @@ impl ParsedMarkdown<'_> {
             math: self.math.clone(),
             components: component_bindings,
         };
+        let mut catalogues = components
+            .map(|selected| super::catalogue::collect(&plan, selected.definitions, &mut budget))
+            .transpose()?
+            .unwrap_or_default();
         let collector = components
             .map(|selected| {
                 super::faq::Collector::new(selected, &plan.components, self.limits.output_bytes)
@@ -830,7 +845,33 @@ impl ParsedMarkdown<'_> {
                     let definition = components
                         .and_then(|selected| selected.definitions.definition(&binding.name))
                         .ok_or(Error::InvalidOutput)?;
+                    let span = binding.occurrence.location.span;
+                    let actions = if definition.semantic
+                        == Some(crate::theme::ComponentSemantic::NavigationAction)
+                        && !binding.presentation_only
+                        && binding
+                            .arguments
+                            .get("disabled")
+                            .and_then(serde_json::Value::as_bool)
+                            != Some(true)
+                    {
+                        plan.links
+                            .iter()
+                            .filter(|link| {
+                                let location = link.occurrence.location.span;
+                                link.occurrence.kind == LinkKind::Link
+                                    && link.occurrence.emitted
+                                    && span.start <= location.start
+                                    && location.end <= span.end
+                            })
+                            .map(|link| budget.copy(&link.destination))
+                            .collect::<Result<_, Error>>()?
+                    } else {
+                        Vec::new()
+                    };
                     Ok(ComponentUse {
+                        actions,
+                        catalogue: catalogues.remove(&binding.occurrence.location.span),
                         faq: faqs.remove(&binding.occurrence.location.span),
                         context: binding.context,
                         name: binding.name,

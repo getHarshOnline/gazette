@@ -103,6 +103,8 @@ graph = { enabled = true, path = "/graph/" }
 
 Search `language` selects the token-processing profile, not the page language. `fields` must be a nonempty distinct list drawn from `title`, `description`, `keywords`, `route`, `body`, `notes`, `summary` and `projects`. Concise profiles select `title`, `body`, `summary`, `projects` and `keywords`. Each emitted search record retains its complete discovery-safe metadata alongside the selected plain ranking values in `indexed`; selecting notes does not create another search identity or merge commentary into the main body.
 
+Set `reuse_body = true` on an explicit selection to emit the selected ranking body as a reference to the retained text. Enable it with a consumer that supports the [body reference](render-outputs.md#search-documents).
+
 The optional graph table selects a view of the existing discovery graph through the selected Theme's declared graph entry, not a second graph or a template selector. `/graph/` maps to `graph/index.html` using the ordinary route compiler. `enabled = false` emits no graph view and refuses an invocation that requests one. Enabled configuration fixes the destination; a different invocation output is refused. Omission leaves the explicit invocation-level graph selection available. Missing Theme entries, unsafe routes and output collisions fail the site rather than silently dropping its view.
 
 `markdown_alternates` and `llms` are strict named tables with required fields, not booleans or positional arrays. Unknown fields, unsupported profile values and wrong types fail parsing. These are publication representations, not another repository/path convention or a generated-reference destination.

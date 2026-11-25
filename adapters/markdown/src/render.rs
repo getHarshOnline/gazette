@@ -512,7 +512,12 @@ fn fragment(
     if state.depth > state.limits.depth {
         return Err(Error::Limit("component nesting"));
     }
-    for _ in root.descendants() {
+    let presentation_only = state
+        .suppress
+        .and_then(|span| state.bindings.components.get(&span))
+        .is_some_and(|binding| binding.presentation_only);
+    let mut link_destinations = Vec::new();
+    for node in root.descendants() {
         state.work.set(
             state
                 .work
@@ -520,6 +525,16 @@ fn fragment(
                 .checked_sub(1)
                 .ok_or(Error::Limit("component rendering work"))?,
         );
+        if presentation_only
+            && matches!(
+                node.data().value,
+                NodeValue::Link(_) | NodeValue::WikiLink(_)
+            )
+        {
+            let span = state.lines.location(node.data().sourcepos)?.span;
+            let binding = state.bindings.links.get(&span).ok_or(Error::InvalidPlan)?;
+            link_destinations.push(binding.destination.clone());
+        }
     }
     let mut output = Output::new(state.limits.output_bytes);
     let written = Cell::new(0);
@@ -574,6 +589,7 @@ fn fragment(
     );
     Ok(Fragment {
         html: output.value,
+        link_destinations,
         text: inspect::text_filtered(
             root,
             state.limits.output_bytes,
@@ -892,6 +908,9 @@ fn format_node(
                 }
                 if let Some(value) = &annotation.site {
                     attribute(context, "data-gazette-destination-site", value.as_str())?;
+                }
+                if let Some(name) = &annotation.site_name {
+                    attribute(context, "data-gazette-destination-site-name", name)?;
                 }
                 if !annotation.relationships.is_empty() {
                     let values = annotation

@@ -12,6 +12,12 @@ pub enum ComponentSemantic {
     Figure,
     /// The admitted Markdown caption of its enclosing declared figure.
     FigureCaption,
+    /// An explicitly ordered group of destination cards.
+    Catalogue,
+    /// A catalogue card whose first heading contains its primary destination.
+    CatalogueEntry,
+    /// An authored invitation to follow an enabled destination.
+    NavigationAction,
     /// An ordered group of authored questions and answers.
     Faq,
     /// One question argument and the component's admitted Markdown answer body.

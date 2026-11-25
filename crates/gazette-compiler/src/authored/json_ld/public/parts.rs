@@ -27,6 +27,12 @@ impl Parts<'_, '_> {
                 .page
                 .component_uses()
                 .any(|component| component.faq.is_some()))
+            && !self.page.component_uses().any(|component| {
+                component
+                    .catalogue
+                    .as_ref()
+                    .is_some_and(|items| !items.is_empty())
+            })
     }
 }
 
@@ -50,7 +56,57 @@ impl Serialize for Parts<'_, '_> {
                 sequence.serialize_element(&Faq(faq, &self.page.data))?;
             }
         }
+        for items in self
+            .page
+            .component_uses()
+            .filter_map(|component| component.catalogue.as_ref())
+        {
+            if !items.is_empty() {
+                sequence.serialize_element(&Catalogue(items))?;
+            }
+        }
         sequence.end()
+    }
+}
+
+struct Catalogue<'a>(&'a [crate::markdown::CatalogueItem]);
+
+impl Serialize for Catalogue<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        #[derive(Serialize)]
+        struct Link<'a> {
+            url: &'a str,
+            #[serde(rename = "@id", skip_serializing_if = "Option::is_none")]
+            identity: Option<&'a str>,
+            #[serde(rename = "@type", skip_serializing_if = "Option::is_none")]
+            kind: Option<&'a str>,
+        }
+        #[derive(Serialize)]
+        struct Item<'a> {
+            #[serde(rename = "@type")]
+            kind: &'static str,
+            position: usize,
+            name: &'a str,
+            item: Link<'a>,
+        }
+
+        let mut map = serializer.serialize_map(Some(3))?;
+        map.serialize_entry("@type", "ItemList")?;
+        map.serialize_entry("numberOfItems", &self.0.len())?;
+        map.serialize_entry(
+            "itemListElement",
+            &Sequence(self.0.iter().enumerate().map(|(index, entry)| Item {
+                kind: "ListItem",
+                position: index + 1,
+                name: &entry.title,
+                item: Link {
+                    url: &entry.url,
+                    identity: entry.identity.as_deref(),
+                    kind: entry.kind,
+                },
+            })),
+        )?;
+        map.end()
     }
 }
 

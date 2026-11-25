@@ -51,6 +51,9 @@ impl Serialize for IndexedText<'_, '_> {
                 SearchField::Route => {
                     map.serialize_entry("route", data.route.map_or("", |route| route.url.as_str()))?
                 }
+                SearchField::Body if self.selection.reuse_body() => {
+                    map.serialize_entry("body", &true)?
+                }
                 SearchField::Body => map.serialize_entry("body", &self.page.body_text)?,
                 SearchField::Notes => map.serialize_entry(
                     "notes",

@@ -417,6 +417,13 @@ fn content<M: SerializeMap>(map: &mut M, node: &ContentNode) -> Result<(), M::Er
         ContentKind::Page {
             family: PageFamily::Utility,
         } if node.schema_type
+            == Some(gazette_core::publication::content::SchemaType::ProfilePage) =>
+        {
+            map.serialize_entry("@type", "ProfilePage")?;
+        }
+        ContentKind::Page {
+            family: PageFamily::Utility,
+        } if node.schema_type
             == Some(gazette_core::publication::content::SchemaType::AboutPage) =>
         {
             map.serialize_entry("@type", "AboutPage")?;
@@ -480,7 +487,7 @@ impl<'a> PrincipalNode<'a> {
         match self.1 {
             Some(website) => format!(
                 "{}#{}",
-                website.canonical_url,
+                website.identity_url,
                 match self.0.kind {
                     PrincipalKind::Person => "person",
                     PrincipalKind::Organization => "organization",
@@ -514,9 +521,8 @@ impl Serialize for PrincipalMention<'_> {
     }
 }
 
-impl Serialize for PrincipalNode<'_> {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut map = serializer.serialize_map(None)?;
+impl PrincipalNode<'_> {
+    fn write_fields<M: SerializeMap>(&self, map: &mut M) -> Result<(), M::Error> {
         let kind = match self.0.kind {
             PrincipalKind::Person => "Person",
             PrincipalKind::Organization => "Organization",
@@ -536,9 +542,18 @@ impl Serialize for PrincipalNode<'_> {
                 &Sequence(self.0.same_as.iter().map(|url| IdentityUrl(url))),
             )?;
         }
+        Ok(())
+    }
+}
+
+impl Serialize for PrincipalNode<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(None)?;
+        self.write_fields(&mut map)?;
         map.end()
     }
 }
+#[derive(Clone)]
 struct IdentityUrl<'a>(&'a str);
 impl Serialize for IdentityUrl<'_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {

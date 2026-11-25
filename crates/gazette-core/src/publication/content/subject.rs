@@ -53,9 +53,13 @@ pub(super) fn validate(nodes: &BTreeMap<Key, ContentNode>, errors: &mut Vec<Diag
             }
         );
         let valid = match (&node.subject, node.schema_type) {
-            (Some(Subject::Principal { .. }), Some(SchemaType::AboutPage)) => utility,
+            (
+                Some(Subject::Principal { .. }),
+                Some(SchemaType::AboutPage | SchemaType::ProfilePage),
+            ) => utility,
             (Some(Subject::Service(_)), None) => utility,
             (None, Some(SchemaType::AboutPage)) => utility,
+            (None, Some(SchemaType::ProfilePage)) => false,
             (Some(_), _) => false,
             (None, _) => true,
         };

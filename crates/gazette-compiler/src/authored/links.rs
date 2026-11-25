@@ -369,6 +369,7 @@ impl ResolvedAuthored<'_, '_> {
                 kind: LinkDestinationKind::Resource,
                 content: None,
                 site: Some(source.site.clone()),
+                site_name: None,
                 relationships: Vec::new(),
                 presentation: self
                     .content
@@ -401,10 +402,23 @@ impl ResolvedAuthored<'_, '_> {
             .as_ref()
             .and_then(|site| self.content.presentation_for(site))
             .map(SitePresentation::from);
+        let site_name = site
+            .as_ref()
+            .filter(|_| kind == LinkDestinationKind::CrossSite)
+            .and_then(|site| {
+                self.content.compilation().workspace.brands().find(|brand| {
+                    brand
+                        .publications
+                        .iter()
+                        .any(|publication| &publication.site == site)
+                })
+            })
+            .map(|brand| brand.name.clone());
         LinkDestination {
             kind,
             content: content_id,
             site,
+            site_name,
             relationships,
             presentation,
         }

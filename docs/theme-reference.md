@@ -292,7 +292,7 @@ The workspace supplies human labels and footer placement. Themes render the reso
 
 ## Machine reading guide
 
-An optional `render.llms = "llms.txt"` declares a captured Theme entry for the publication's generated machine reading guide. The application owns `llms.txt` placement and supplies one bounded `llms` object: `title`, `description`, `coverage`, `include_human_link`, `pages` and `sections`. `pages` is the complete serving-URL-ordered built catalogue for `all-pages`; `sections` is the explicit curated path, with `title` and `pages` per section. Each page has authored `title`, optional authored `description`, actual Markdown `url`, serving `html_url`, an existing `id` when one exists, and optional generated-view `page_number`/`page_count`, `listing_variant` and `listing_direction`. Themes format this data using the native `markdown_text` and `markdown_destination` encoders; they do not discover pages or summarize bodies. The `.txt` entry does not use HTML suffix escaping. Without an entry the existing bounded native Markdown writer supplies the guide. See [workspace machine outputs](workspace-publications.md#brand-publication-settings) and [the native generation contract](local-rendering.md).
+An optional `render.llms = "llms.txt"` declares a captured Theme entry for the publication's generated machine reading guide. The application owns `llms.txt` placement and supplies one bounded `llms` object: `title`, `description`, `coverage`, `include_human_link`, `pages` and `sections`. `pages` is the complete serving-URL-ordered built catalogue for `all-pages`; `sections` holds the curated or navigation reading path, with `title` and `pages` per section. Each page has authored `title`, optional authored `description`, actual Markdown `url`, serving `html_url`, an existing `id` when one exists, and optional generated-view `page_number`/`page_count`, `listing_variant` and `listing_direction`. Themes format this data using the native `markdown_text` and `markdown_destination` encoders; they do not discover pages or summarize bodies. The `.txt` entry does not use HTML suffix escaping. Without an entry the existing bounded native Markdown writer supplies the guide. See [workspace machine outputs](workspace-publications.md#brand-publication-settings) and [the native generation contract](local-rendering.md).
 
 ## Ranked recommendations
 
@@ -424,6 +424,8 @@ semantic = { kind = "figure-caption" }
 ```
 
 The figure template renders `<figure>{{ component.body.html | safe }}</figure>`; the caption template renders `<figcaption>{{ component.body.html | safe }}</figcaption>`. Inert wrapper attributes and surrounding whitespace are allowed. Gazette checks the wrapper separately and requires its complete admitted body to remain unchanged, including the image destination, alt, title, caption formatting and links. The existing Markdown, MathML and inline SVG admission rules continue to govern that body; the figure guard does not reinterpret it through the smaller SVG profile used for general Theme HTML.
+
+A presentation-only component can read `component.body.link_destinations` in authored order. These addresses use the same resolved link bindings as HTML. A playback template can serialise the array with `json_script` inside a non-executable JSON block and render the scene’s stills and captions separately.
 
 ```markdown
 ::::figure

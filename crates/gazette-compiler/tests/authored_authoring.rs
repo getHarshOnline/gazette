@@ -34,7 +34,13 @@ fn article_metadata_completion_uses_the_native_contract() {
             .iter()
             .map(|candidate| candidate.label.as_str())
             .collect::<Vec<_>>(),
-        ["AboutPage", "Article", "BlogPosting", "TechArticle"]
+        [
+            "AboutPage",
+            "Article",
+            "BlogPosting",
+            "ProfilePage",
+            "TechArticle"
+        ]
     );
 }
 

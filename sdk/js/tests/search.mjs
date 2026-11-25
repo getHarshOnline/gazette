@@ -72,12 +72,25 @@ test('explicit emitted fields rank only selected plain values and retain full im
 });
 
 test('emitted ranking projection is nonempty closed typed data and cannot weaken required identity metadata', () => {
-  for (const indexed of [{}, null, [], { invented: 'value' }, { notes: '<valid>', keywords: 'not-array' }, { body: true }, { projects: [null] }]) {
+  for (const indexed of [{}, null, [], { invented: 'value' }, { notes: '<valid>', keywords: 'not-array' }, { body: false }, { notes: true }, { projects: [null] }]) {
     assert.throws(() => createIndex([record('bad', 'Title', 'Body', { indexed })], limits), code('search_data'));
   }
   const missing = record('missing', 'Title', 'Body', { indexed: { notes: 'note' } });
   delete missing.content.title;
   assert.throws(() => createIndex([missing], limits), code('search_data'));
+});
+
+test('a retained body reference ranks the same text as the explicit field', () => {
+  const body = 'Analysis of a stable lexical signature';
+  const document = record('body-reference', 'Title', body);
+  const search = indexed => createIndex([{ ...document, indexed }], limits)
+    .search('signature', { limit: 1, fields: { body: 1 } });
+  const [compact] = search({ body: true });
+  const [explicit] = search({ body });
+  assert.ok(compact);
+  assert.deepEqual({ ...compact, record: { ...compact.record, indexed: { body } } },
+    { ...explicit, record: { ...explicit.record, indexed: { body } } });
+  assert.equal(search({ title: 'Title' }).length, 0);
 });
 
 test('authored keywords are searchable without inferred classification or mutable metadata', () => {
@@ -348,4 +361,32 @@ test('native HTTP refuses redirects, denied responses, bad data, overflow and ti
   }
   await assert.rejects(loadIndex(`${base}/slow`, { ...options, timeoutMs: 30 }), code('search_timeout'));
   assert.deepEqual(calls, ['/redirect', '/denied', '/not-modified', '/mime', '/bad', '/utf8', '/large', '/slow']);
+});
+
+test('acquisition distinguishes a progressing corpus from a stalled or overlong response', async t => {
+  const payload = JSON.stringify(documents());
+  const server = createServer((request, response) => {
+    response.writeHead(200, { 'content-type': 'application/json' });
+    response.write(payload.slice(0, 1));
+    if (request.url === '/stall') return;
+    let offset = 1;
+    const timer = setInterval(() => {
+      if (request.url === '/long') { response.write(' '); return; }
+      const cut = offset + Math.ceil(payload.length / 5);
+      response.write(payload.slice(offset, cut));
+      offset = cut;
+      if (offset >= payload.length) response.end();
+    }, 50);
+    response.on('close', () => clearInterval(timer));
+  });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  t.after(() => { server.closeAllConnections(); server.close(); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const options = { ...limits, allowNetwork: true, maxResponseBytes: 32768, timeoutMs: 600, idleTimeoutMs: 180 };
+  assert.equal((await loadIndex(`${base}/progress`, options)).size, documents().length);
+  const stalled = performance.now();
+  await assert.rejects(loadIndex(`${base}/stall`, { ...options, timeoutMs: 1200 }), code('search_timeout'));
+  assert.ok(performance.now() - stalled < 900);
+  await assert.rejects(loadIndex(`${base}/long`, options), code('search_timeout'));
 });

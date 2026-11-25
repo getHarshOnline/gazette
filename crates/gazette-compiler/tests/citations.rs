@@ -302,7 +302,7 @@ fn citation_foreign_site_download_keeps_the_existing_destination_contract() {
     assert_eq!(
         json!(p)["citation"]["pdf_destination"],
         json!({
-            "kind":"cross-site", "content":null, "site":"site:two", "relationships":[], "presentation":null
+            "kind":"cross-site", "content":null, "site":"site:two", "site_name":"Example", "relationships":[], "presentation":null
         })
     );
     assert!(p.data.assets.is_empty());

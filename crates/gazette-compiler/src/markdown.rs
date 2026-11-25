@@ -8,7 +8,9 @@ pub use gazette_core::markdown::{Limits, LinkForm, LinkKind};
 use gazette_core::source::{Sha256Digest, Span};
 use gazette_ports::markdown::{Document, Markdown};
 
+mod catalogue;
 mod container_contents;
+pub use catalogue::CatalogueItem;
 mod faq;
 pub use faq::{Faq, FaqQuestion, validate_faq_html};
 mod figures;

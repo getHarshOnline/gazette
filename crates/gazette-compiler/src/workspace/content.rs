@@ -1,7 +1,10 @@
 //! Bind the existing content graph to the exact compiled workspace, without policy admission.
 
-use gazette_core::publication::content::{Declaration, Diagnostic, Error, Graph, Limits};
+use gazette_core::publication::content::{
+    ContentKind, Declaration, Diagnostic, Error, Graph, Limits, PageFamily, SchemaType, Subject,
+};
 use gazette_core::publication::routing::PublicBaseUrl;
+use gazette_core::publication::{ContentLifecycle, PrincipalKind, PrincipalWebsite};
 use std::collections::BTreeMap;
 
 use super::{Compilation, Key, ResolvedRoute, Site, ThemeSelection};
@@ -16,6 +19,7 @@ pub struct ResolvedContent<'a> {
     compilation: &'a Compilation,
     graph: Graph,
     projects: BTreeMap<Key, gazette_core::publication::Project>,
+    profiles: BTreeMap<Key, Key>,
     routes: BTreeMap<Key, ResolvedRoute>,
     preview_urls: BTreeMap<Key, PublicBaseUrl>,
 }
@@ -61,7 +65,13 @@ impl Compilation {
                     .publication_for(&node.site)
                     .and_then(|publication| publication.language.clone());
             }
-            if node.lifecycle == gazette_core::publication::ContentLifecycle::Published
+            if node.lifecycle == ContentLifecycle::Published
+                && matches!(
+                    node.structure,
+                    ContentKind::Page {
+                        family: PageFamily::Article
+                    }
+                )
                 && node.attributions.is_empty()
                 && let Some(author) = self
                     .workspace
@@ -200,6 +210,30 @@ impl Compilation {
                 }
             }
         }
+        let mut profiles = BTreeMap::new();
+        for node in graph.nodes().filter(|node| {
+            node.schema_type == Some(SchemaType::ProfilePage)
+                && node.lifecycle == ContentLifecycle::Published
+        }) {
+            let Some(Subject::Principal { principal }) = &node.subject else {
+                continue;
+            };
+            let owns_site = self.workspace.principal(principal).is_some_and(|person| {
+                person.kind == PrincipalKind::Person
+                    && matches!(&person.website, Some(PrincipalWebsite::Site { site }) if site == &node.site)
+            });
+            if !owns_site
+                || profiles
+                    .insert(principal.clone(), node.id.clone())
+                    .is_some()
+            {
+                errors.push(Diagnostic {
+                    code: "content_principal_profile",
+                    source: node.id.clone(),
+                    target: Some(principal.clone()),
+                });
+            }
+        }
         if !errors.is_empty() {
             errors.sort();
             errors.dedup();
@@ -209,6 +243,7 @@ impl Compilation {
             compilation: self,
             graph,
             projects,
+            profiles,
             routes: BTreeMap::new(),
             preview_urls: BTreeMap::new(),
         };
@@ -327,6 +362,11 @@ impl<'a> ResolvedContent<'a> {
     /// or unrouted, never an inferred filename/title route or publication approval.
     pub fn route(&self, content: &Key) -> Option<&ResolvedRoute> {
         self.routes.get(content)
+    }
+
+    pub(crate) fn profile_route(&self, principal: &Key) -> Option<(&Key, &ResolvedRoute)> {
+        let profile = self.profiles.get(principal)?;
+        Some((profile, self.route(profile)?))
     }
 
     /// Exact compilation, including its source digest; no reconstructed configuration.

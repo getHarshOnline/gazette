@@ -46,6 +46,8 @@ export function searchPublication(index, query) {
 
 Call `loadPublicationSearch` once, then pass its result and the reader's query to `searchPublication`. Each hit keeps its source record: use `hit.record.content.title` as text and `hit.record.route.url` as the navigation address. Insert titles with `textContent`, not as HTML.
 
+Set `idleTimeoutMs` when a progressing download needs a longer overall `timeoutMs`. The idle deadline renews as response bytes arrive. The overall deadline and byte limits still apply.
+
 If your application already has the complete records, `createIndex(records, options)` builds the same index without a request.
 
 Every index bound and the tokenizer profile are required. `lexical` retains the provider's whitespace/hyphen tokenization and case normalization but resets its English trimming, stop-word and stemming pipeline. `english` explicitly selects that existing pipeline for the corpus; neither profile infers a document's declared language or provides universal linguistic segmentation. Index construction validates the complete dataset before calling the retained Elasticlunr provider. Duplicate content IDs or serving URLs, missing structural fields, unsafe URLs, cycles, getters, non-JSON data and exhausted limits reject the whole index. Metadata is retained as an immutable JSON snapshot; later caller mutation cannot alter destinations, snippets or ranking. Gazette-generated data is already JSON; this is not an arbitrary JavaScript object execution interface.

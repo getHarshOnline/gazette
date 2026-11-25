@@ -409,6 +409,9 @@ pub struct LinkAnnotation {
     pub content: Option<Key>,
     /// Known configured destination site, including an unrouted site-local destination.
     pub site: Option<Key>,
+    /// Configured name of the publication receiving a crossing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub site_name: Option<String>,
     /// Direct authored relationship evidence in stable semantic order; ordinary Markdown supplies none.
     pub relationships: Vec<LinkRelationship>,
     /// Exact effective destination Theme package, when the configured site selects one.
@@ -558,6 +561,8 @@ pub struct Fragment {
     pub html: String,
     /// Text from that emitted structure, not whole-source inspection or HTML stripping.
     pub text: String,
+    /// Resolved link destinations for a presentation-only component, in body order.
+    pub link_destinations: Vec<String>,
 }
 
 /// Full body and optional balanced prefix share one resolved plan.

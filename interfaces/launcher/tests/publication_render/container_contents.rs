@@ -18,7 +18,14 @@ fn fixture_with(body: &str, semantic: bool, leaf: bool, extra: &[(&str, &[u8])])
         } else {
             ""
         }
-    );
+    ) + "
+[components.catalogue]
+template='catalogue.html'
+semantic={kind='catalogue'}
+[components.card]
+template='card.html'
+semantic={kind='catalogue-entry'}
+";
     let home = format!("{HOME}{}", if leaf { "" } else { body });
     let page = format!(
         "{}{}",
@@ -51,6 +58,14 @@ fn fixture_with(body: &str, semantic: bool, leaf: bool, extra: &[(&str, &[u8])])
             "theme/templates/question.html",
             b"<h2>{{ component.arguments.question }}</h2>{{ component.body.html | safe }}",
         ),
+        (
+            "theme/templates/catalogue.html",
+            b"<section><h2>Catalogue</h2>{{ component.body.html | safe }}</section>",
+        ),
+        (
+            "theme/templates/card.html",
+            b"<article>{{ component.body.html | safe }}</article>",
+        ),
     ];
     files.extend_from_slice(extra);
     Fixture::new(&files)
@@ -58,6 +73,44 @@ fn fixture_with(body: &str, semantic: bool, leaf: bool, extra: &[(&str, &[u8])])
 
 fn config(fixture: &Fixture) -> String {
     fixture.config().replace("public_base_url=", "machine={json_ld=true,search='lexical',markdown_alternates={enabled=true,directory_page='index.md',file_page='append-md',media_type='text/markdown',discovery_rel='alternate'}}\npublic_base_url=")
+}
+
+#[test]
+fn catalogue_uses_the_visible_linked_headings_in_order() {
+    let body = r#"
+::::catalogue
+:::card
+### [Alpha](https://example.test/alpha/)
+
+Read the [supporting note](https://example.test/note/).
+:::
+
+:::card
+### [Beta](https://example.test/beta/)
+:::
+::::
+"#;
+    let fixture = fixture(body, false, false);
+    let inputs = acquire(&config(&fixture));
+    let rendered = render(&inputs).expect("authored catalogue");
+    let output = rendered.site().output();
+    let html = String::from_utf8_lossy(bytes(output, "index.html"));
+    assert!(html.contains("<h2>Catalogue</h2>"));
+    let model: Value = serde_json::from_slice(bytes(output, "model.json")).unwrap();
+    let parts = model["pages"]["collection:home"]["json_ld"]["hasPart"]
+        .as_array()
+        .expect("page parts");
+    let list = parts
+        .iter()
+        .find(|node| node["@type"] == "ItemList")
+        .expect("catalogue");
+    assert_eq!(
+        list["itemListElement"],
+        serde_json::json!([
+            {"@type":"ListItem","position":1,"name":"Alpha","item":{"url":"https://example.test/alpha/"}},
+            {"@type":"ListItem","position":2,"name":"Beta","item":{"url":"https://example.test/beta/"}}
+        ])
+    );
 }
 
 #[test]

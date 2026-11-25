@@ -92,9 +92,16 @@ fn configured_public_canonical_base_is_optional_and_never_replaced_by_preview_li
         "https://docs.example.test/reference/": "http://127.0.0.1:43123/reference/"
     }))
     .unwrap();
-    for base in [
-        None,
-        Some("https://docs.example.test/reference/".parse().unwrap()),
+    for (base, canonical) in [
+        (None, None),
+        (
+            Some("https://docs.example.test/".parse().unwrap()),
+            Some("https://docs.example.test"),
+        ),
+        (
+            Some("https://docs.example.test/reference/".parse().unwrap()),
+            Some("https://docs.example.test/reference"),
+        ),
     ] {
         for local in [false, true] {
             let output = Mintlify::new(&gazette_adapter_markdown::Comrak)
@@ -113,11 +120,8 @@ fn configured_public_canonical_base_is_optional_and_never_replaced_by_preview_li
             let config: Value =
                 serde_json::from_slice(output.file(&"docs.json".parse().unwrap()).unwrap())
                     .unwrap();
-            if let Some(base) = &base {
-                assert_eq!(
-                    config["seo"],
-                    json!({"metatags":{"canonical":base.as_str()}})
-                );
+            if let Some(canonical) = canonical {
+                assert_eq!(config["seo"], json!({"metatags":{"canonical":canonical}}));
             } else {
                 assert!(
                     config.get("seo").is_none(),
@@ -196,7 +200,7 @@ fn publication_reservation_reaches_the_docs_host_and_telemetry_is_explicit() {
         let Some(usage) = usage else {
             assert_eq!(
                 config["seo"],
-                json!({"metatags": {"canonical": base.as_str()}})
+                json!({"metatags": {"canonical": "https://docs.example.test"}})
             );
             assert!(file(&output, "robots.txt").is_none());
             assert!(file(&output, ".well-known/tdmrep.json").is_none());
@@ -206,7 +210,7 @@ fn publication_reservation_reaches_the_docs_host_and_telemetry_is_explicit() {
         assert_eq!(
             config["seo"],
             json!({"metatags": {
-                "canonical": base.as_str(),
+                "canonical": "https://docs.example.test",
                 "tdm-reservation": "1",
                 "tdm-policy": "https://site.example.test/terms/"
             }})

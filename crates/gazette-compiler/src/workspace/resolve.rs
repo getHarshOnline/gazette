@@ -37,6 +37,17 @@ pub(super) fn workspace(
         report(&mut errors, "workspace_dot_command", "dot_renderer", None);
     }
     if let Some(renderer) = &declaration.social_card_renderer {
+        if renderer
+            .jpeg_quality
+            .is_some_and(|quality| !(1..=100).contains(&quality))
+        {
+            report(
+                &mut errors,
+                "workspace_social_card_quality",
+                "social_card_renderer.jpeg_quality",
+                None,
+            );
+        }
         for (field, executable) in [
             ("social_card_renderer.node", &renderer.node),
             ("social_card_renderer.browser", &renderer.browser),
@@ -463,6 +474,46 @@ pub(super) fn workspace(
         &mut errors,
     );
     super::projects::validate(&projects, &mut errors);
+    for brand in brands.values() {
+        if let Some(owner) = &brand.owner
+            && !principals.contains_key(owner)
+        {
+            report(
+                &mut errors,
+                "workspace_reference",
+                "brands.owner",
+                Some(owner),
+            );
+        }
+        if let Some(subject) = &brand.subject
+            && !projects.contains_key(subject)
+        {
+            report(
+                &mut errors,
+                "workspace_reference",
+                "brands.subject",
+                Some(subject),
+            );
+        }
+        let mut members = BTreeSet::new();
+        for project in &brand.projects {
+            if !projects.contains_key(project) {
+                report(
+                    &mut errors,
+                    "workspace_reference",
+                    "brands.projects",
+                    Some(project),
+                );
+            } else if !members.insert(project) {
+                report(
+                    &mut errors,
+                    "workspace_duplicate",
+                    "brands.projects",
+                    Some(project),
+                );
+            }
+        }
+    }
     let mut declared_taxonomies = declaration.taxonomies;
     super::taxonomies::normalize(&mut declared_taxonomies, &mut errors);
     let taxonomies = index(

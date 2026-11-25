@@ -1,31 +1,110 @@
 //! Schema.org publication facts, borrowed independently from native inspection metadata.
 
+mod brands;
 mod navigation;
 mod parts;
 mod terms;
 
 use super::{
-    AttributionRole, ContentKind, ContentNode, DateLiteral, Described, Discovery, Image, JsonLd,
-    PageFamily, PrincipalNode, ProjectRelation, Reference, Sequence, subject,
+    AttributionRole, ContentKind, ContentNode, DateLiteral, Described, Discovery, IdentityUrl,
+    Image, JsonLd, PageFamily, PrincipalNode, ProjectRelation, Reference, Sequence, subject,
 };
+use crate::authored::PageData;
 use crate::authored::public_identity;
 use crate::{authored::ListingPage, workspace::ResolvedRoute};
 use serde::{Serialize, Serializer, ser::SerializeMap};
 
 /// Standard linked data for a page, with the same discovery selection as its native view.
 /// Internal source bindings, relationship evidence and operational state stay in that view.
-pub struct PublicJsonLd<'a, 'data>(JsonLd<'a, 'data>);
+pub struct PublicJsonLd<'a, 'data> {
+    view: JsonLd<'a, 'data>,
+    generation: Option<(&'a str, Option<&'a str>)>,
+    include_actions: bool,
+}
 
 impl<'a, 'data> JsonLd<'a, 'data> {
     /// Select public Schema.org facts without changing the page or its discovery boundaries.
     pub fn public(self) -> PublicJsonLd<'a, 'data> {
-        PublicJsonLd(self)
+        PublicJsonLd {
+            include_actions: !self.listing,
+            view: self,
+            generation: None,
+        }
+    }
+}
+
+impl<'a> PublicJsonLd<'a, '_> {
+    /// Carry an authored page's actions when representing it in the site's discovery graph.
+    pub fn with_authored_actions(mut self) -> Self {
+        self.include_actions = true;
+        self
+    }
+
+    /// Attach the selected footer's generator and optional theme to the public graph.
+    pub fn with_generation(mut self, generation: Option<(&'a str, Option<&'a str>)>) -> Self {
+        self.generation = generation;
+        self
     }
 }
 
 impl Serialize for PublicJsonLd<'_, '_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let view = &self.0;
+        let page = &self.view.page.data;
+        let website = Website::for_home(page);
+        if website.is_none() && page.brand_graph.is_none() {
+            return PublicPage {
+                view: &self.view,
+                include_context: true,
+                include_actions: self.include_actions,
+                generation: self.generation,
+            }
+            .serialize(serializer);
+        }
+        let data = page;
+        let page = PublicPage {
+            view: &self.view,
+            include_context: false,
+            include_actions: self.include_actions,
+            generation: self.generation,
+        };
+        let mut map = serializer.serialize_map(Some(2))?;
+        map.serialize_entry("@context", &Context)?;
+        map.serialize_entry("@graph", &PublicationGraph(page, website, data))?;
+        map.end()
+    }
+}
+
+struct PublicationGraph<'a, 'view, 'data>(
+    PublicPage<'a, 'view, 'data>,
+    Option<Website<'a, 'data>>,
+    &'a PageData<'data>,
+);
+
+impl Serialize for PublicationGraph<'_, '_, '_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeSeq;
+        let mut sequence = serializer.serialize_seq(None)?;
+        sequence.serialize_element(&self.0)?;
+        if let Some(website) = &self.1 {
+            sequence.serialize_element(website)?;
+        }
+        if let Some(graph) = &self.2.brand_graph {
+            brands::append(&mut sequence, graph)?;
+        }
+        sequence.end()
+    }
+}
+
+struct PublicPage<'a, 'view, 'data> {
+    view: &'a JsonLd<'view, 'data>,
+    include_context: bool,
+    include_actions: bool,
+    generation: Option<(&'a str, Option<&'a str>)>,
+}
+
+impl Serialize for PublicPage<'_, '_, '_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let view = self.view;
         let page = &view.page.data;
         if let Some(discovery) = view.discovery {
             discovery
@@ -33,12 +112,34 @@ impl Serialize for PublicJsonLd<'_, '_> {
                 .map_err(serde::ser::Error::custom)?;
         }
         let described = Described::default();
+        if let Some(owner) = page.brand_graph.as_ref().and_then(brands::owner) {
+            described.0.borrow_mut().push(owner.identity());
+        }
         let mut map = serializer.serialize_map(None)?;
-        map.serialize_entry("@context", &Context)?;
-        header(&mut map, page.content.node, page.route, page.content.listing)?;
+        if self.include_context {
+            map.serialize_entry("@context", &Context)?;
+        }
+        header(
+            &mut map,
+            page.content.node,
+            page.route,
+            page.content.listing,
+        )?;
         // Site terms describe use of every page; the content licence never inherits them.
         if let Some(terms) = &page.site.terms_url {
             map.serialize_entry("usageInfo", &super::IdentityUrl(terms))?;
+        }
+        if let Some((generator, theme)) = self.generation {
+            map.serialize_entry(
+                "http://www.w3.org/ns/prov#wasGeneratedBy",
+                &serde_json::json!({
+                    "@type": "http://www.w3.org/ns/prov#Activity",
+                    "http://www.w3.org/ns/prov#used": std::iter::once(generator)
+                        .chain(theme)
+                        .map(|url| serde_json::json!({"@id": url}))
+                        .collect::<Vec<_>>()
+                }),
+            )?;
         }
         if !page.content.keywords.is_empty() || !page.classifications.is_empty() {
             map.serialize_entry("keywords", &terms::Keywords(page))?;
@@ -46,11 +147,51 @@ impl Serialize for PublicJsonLd<'_, '_> {
         if let Some(listing) = &page.listing {
             map.serialize_entry("mainEntity", &listing.public_item_list())?;
         } else if let Some(subject) = &page.subject {
-            map.serialize_entry("mainEntity", &subject::MainEntity(subject, Some(&described)))?;
+            map.serialize_entry(
+                "mainEntity",
+                &subject::MainEntity(subject, Some(&described)),
+            )?;
+        } else if page
+            .site
+            .metadata
+            .as_ref()
+            .and_then(|metadata| metadata.about)
+            == Some(&page.content.node.id)
+            && let Some(graph) = &page.brand_graph
+        {
+            map.serialize_entry("mainEntity", &IdentityUrl(&graph.current.identity))?;
         }
         navigation::breadcrumbs(&mut map, page, view.discovery)?;
         if let Some(description) = &page.content.description {
             map.serialize_entry("description", description)?;
+        }
+        if let Some(citation) = page.citation.as_ref().and_then(|citation| citation.text) {
+            map.serialize_entry("citation", citation)?;
+        }
+        if self.include_actions {
+            let actions = view
+                .page
+                .component_uses()
+                .flat_map(|component| component.actions.iter().map(String::as_str))
+                .chain(
+                    page.invitations
+                        .values()
+                        .map(|invitation| invitation.destination.route.public_url.as_str()),
+                )
+                .filter(|target| {
+                    target.starts_with("http://")
+                        || target.starts_with("https://")
+                        || target.starts_with("mailto:")
+                })
+                .collect::<std::collections::BTreeSet<_>>();
+            if !actions.is_empty() {
+                map.serialize_entry("potentialAction", &Sequence(actions.iter().copied().map(|target| {
+                    serde_json::json!({
+                        "@type": if target.starts_with("mailto:") { "CommunicateAction" } else { "ViewAction" },
+                        "target": target,
+                    })
+                })))?;
+            }
         }
         if let Some(summary) = &view.page.summary {
             map.serialize_entry("abstract", &summary.text)?;
@@ -117,7 +258,7 @@ impl Serialize for PublicJsonLd<'_, '_> {
                         projects
                             .clone()
                             .filter(move |value| value.relationship.relation() == relation)
-                            .map(terms::Project),
+                            .map(|project| terms::Project(project, &described)),
                     ),
                 )?;
             }
@@ -159,6 +300,63 @@ impl Serialize for PublicJsonLd<'_, '_> {
                     view.discovery.filter(|_| view.listing),
                 ),
             )?;
+        }
+        map.end()
+    }
+}
+
+struct Website<'a, 'data> {
+    page: &'a PageData<'data>,
+    name: &'a str,
+    url: &'a str,
+}
+
+impl<'a, 'data> Website<'a, 'data> {
+    fn for_home(page: &'a PageData<'data>) -> Option<Self> {
+        let metadata = page.site.metadata.as_ref()?;
+        let home = metadata.home.as_ref()?;
+        if home.id != &page.content.node.id {
+            return None;
+        }
+        Some(Self {
+            page,
+            name: metadata.brand.name,
+            url: &page.route?.public_url,
+        })
+    }
+}
+
+impl Serialize for Website<'_, '_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let site = &self.page.site;
+        let publisher = PrincipalNode(site.publisher_principal, site.publisher_website.as_ref());
+        let mut map = serializer.serialize_map(None)?;
+        map.serialize_entry("@id", &format!("{}#website", self.url))?;
+        map.serialize_entry("@type", "WebSite")?;
+        map.serialize_entry("name", self.name)?;
+        map.serialize_entry("url", self.url)?;
+        map.serialize_entry("publisher", &IdentityUrl(&publisher.identity()))?;
+        let subjects = self.page.projects.iter().filter(|project| {
+            project.relationship.relation() == ProjectRelation::About
+                && project.project.visibility == gazette_core::publication::Visibility::Public
+        });
+        let brand = self
+            .page
+            .brand_graph
+            .as_ref()
+            .map(|graph| IdentityUrl(&graph.current.identity));
+        if brand.is_some() || subjects.clone().next().is_some() {
+            map.serialize_entry(
+                "about",
+                &Sequence(
+                    brand
+                        .into_iter()
+                        .chain(subjects.map(|project| IdentityUrl(&project.identity))),
+                ),
+            )?;
+        }
+        if let Some(terms) = &site.terms_url {
+            map.serialize_entry("usageInfo", &IdentityUrl(terms))?;
         }
         map.end()
     }

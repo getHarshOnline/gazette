@@ -9,11 +9,51 @@ use serde_json::Value;
 mod lineage;
 
 use super::{
-    Fixture, PAGE, PROJECT_DOC, RENDER_ARGUMENTS, acquire, build, bytes, cli, fs, render, source,
-    tempdir, toml,
+    Fixture, HOME, PAGE, PROJECT_DOC, RENDER_ARGUMENTS, acquire, build, bytes, cli, fs, render,
+    source, tempdir, toml,
 };
 
 const TEMPLATE: &[u8] = b"<!doctype html><html><head><title>Local fixture</title>{% if json_ld is defined %}<script type=\"application/ld+json\">{{ json_ld | json_script }}</script>{% endif %}</head><body><h1>{{ content.title }}</h1>{{ body_html | safe }}<p>after-json-ld</p></body></html>";
+
+#[test]
+fn software_source_keeps_its_own_credit_licence_and_citation() {
+    let fixture = Fixture::new(&[
+        ("theme/templates/page.html", TEMPLATE),
+        ("project/guide.md", PROJECT_DOC.as_bytes()),
+    ]);
+    let workspace = fixture
+        .project_config(true)
+        .replace(
+            "id='project:subject'",
+            "id='project:subject'\nkind='software-application'\nidentity='https://one.example/#application'\nrepository='https://code.example/tool'\nsource={license_url='https://code.example/tool/LICENCE',citation_url='https://code.example/tool/CITATION.cff',author='owner:one',rights_holder='owner:one'}",
+        )
+        .replace("public_base_url=", "machine={json_ld=true}\npublic_base_url=");
+    let inputs = acquire(&workspace);
+    let rendered = render(&inputs).expect("software publication");
+    let model: Value = serde_json::from_slice(bytes(rendered.site().output(), "model.json"))
+        .expect("publication model");
+    let document = &model["pages"]["doc:native"]["json_ld"];
+    let application = &document["about"][0];
+    let source = &application["http://purl.org/dc/terms/relation"];
+    assert_eq!(application["@type"], "SoftwareApplication");
+    assert!(application.get("license").is_none());
+    assert_eq!(source["@type"], "SoftwareSourceCode");
+    assert_eq!(source["codeRepository"], "https://code.example/tool");
+    assert_eq!(source["targetProduct"]["@id"], application["@id"]);
+    assert_eq!(
+        source["license"]["@id"],
+        "https://code.example/tool/LICENCE"
+    );
+    assert_eq!(
+        source["citation"]["@id"],
+        "https://code.example/tool/CITATION.cff"
+    );
+    assert_eq!(source["author"]["@id"], document["publisher"]["@id"]);
+    assert_eq!(
+        source["copyrightHolder"]["@id"],
+        document["publisher"]["@id"]
+    );
+}
 
 #[test]
 fn project_names_reach_html_machine_and_registry_views_from_one_exact_catalog() {
@@ -273,6 +313,52 @@ fn assert_connected(inputs: &build::AcquiredInputs, tree: &source::CapturedSourc
         );
     }
     model
+}
+
+#[test]
+fn declared_home_projects_its_publication_identity_into_html_and_site_json_ld() {
+    let fixture = Fixture::new(&[
+        ("theme/templates/page.html", TEMPLATE),
+        ("one/home.md", HOME.as_bytes()),
+    ]);
+    let config = enable(&fixture.config()).replacen(
+        "public_base_url=",
+        "home='collection:home'\npublic_base_url=",
+        1,
+    );
+    let inputs = acquire(&config);
+    let rendered = render(&inputs).expect("publication with a declared home");
+    let tree = rendered.site().output();
+    let home = script_values(bytes(tree, "index.html"));
+    assert_eq!(home.len(), 1);
+    let payload = &home[0];
+    assert_public(payload);
+    let nodes = payload["@graph"].as_array().expect("home graph");
+    let [page, website, brand] = nodes.as_slice() else {
+        unreachable!("the retained home, publication and brand");
+    };
+    let base = "https://one.example/mount/";
+    assert_eq!(page["@id"], base);
+    assert_eq!(website["@type"], "WebSite");
+    assert_eq!(website["@id"], format!("{base}#website"));
+    assert_eq!(website["name"], "Explicit bindings");
+    assert_eq!(website["url"], base);
+    assert!(page["publisher"]["@id"].is_string());
+    assert_eq!(website["publisher"]["@id"], page["publisher"]["@id"]);
+    assert!(website.get("license").is_none());
+    assert_eq!(brand["@type"], "Brand");
+    assert_eq!(brand["subjectOf"]["@id"], website["@id"]);
+    let site: Value = serde_json::from_slice(bytes(tree, "site.jsonld")).expect("site graph");
+    assert!(site["@context"].is_object());
+    assert_eq!(site["@context"], payload["@context"]);
+    let site_nodes = site["@graph"].as_array().expect("flat site nodes");
+    assert_eq!(site_nodes.iter().filter(|node| *node == website).count(), 1);
+    assert!(site_nodes.iter().any(|node| node["@id"] == base));
+    assert!(
+        script_values(bytes(tree, "guide/index.html"))[0]
+            .get("@graph")
+            .is_none()
+    );
 }
 
 #[test]

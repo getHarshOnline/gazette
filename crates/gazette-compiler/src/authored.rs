@@ -97,6 +97,7 @@ mod subjects;
 pub use subjects::SubjectView;
 mod projection;
 pub use principals::PrincipalWebsiteView;
+mod brand_graph;
 mod publication;
 pub use publication::{
     PublicationBrand, PublicationHome, PublicationMetadata, PublicationMetadataError, RenderYear,

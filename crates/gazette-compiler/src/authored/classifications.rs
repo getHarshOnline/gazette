@@ -102,6 +102,7 @@ impl ResolvedAuthored<'_, '_> {
                 },
                 content: None,
                 site: Some(owner_site.clone()),
+                site_name: None,
                 relationships: Vec::new(),
                 presentation: self
                     .content

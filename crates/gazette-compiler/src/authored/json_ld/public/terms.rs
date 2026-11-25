@@ -1,6 +1,6 @@
 //! Project references and scoped classifications retain their declared meanings.
 
-use super::Reference;
+use super::{Described, IdentityUrl, PrincipalNode, Reference, Sequence};
 use crate::authored::{ClassificationView, PageData, ProjectView};
 use gazette_core::{publication::ProjectKind, source::Sha256Digest};
 use serde::{
@@ -8,7 +8,7 @@ use serde::{
     ser::{SerializeMap, SerializeSeq},
 };
 
-pub(super) struct Project<'a, 'data>(pub(super) &'a ProjectView<'data>);
+pub(super) struct Project<'a, 'data>(pub(super) &'a ProjectView<'data>, pub(super) &'a Described);
 impl Serialize for Project<'_, '_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map = serializer.serialize_map(None)?;
@@ -21,10 +21,58 @@ impl Serialize for Project<'_, '_> {
         if let Some(name) = &self.0.project.name {
             map.serialize_entry("name", name)?;
         }
+        if let Some(description) = self.0.description {
+            map.serialize_entry("description", description)?;
+        }
         if self.0.project.kind == Some(ProjectKind::SoftwareSourceCode)
             && let Some(repository) = &self.0.project.repository
         {
             map.serialize_entry("codeRepository", repository)?;
+        }
+        let mut parents = self
+            .0
+            .programme
+            .iter()
+            .chain(&self.0.portfolio_brands)
+            .map(|id| IdentityUrl(id));
+        if let Some(first) = parents.next() {
+            if parents.clone().next().is_some() {
+                map.serialize_entry(
+                    "http://purl.org/dc/terms/isPartOf",
+                    &Sequence(std::iter::once(first).chain(parents)),
+                )?;
+            } else {
+                map.serialize_entry("http://purl.org/dc/terms/isPartOf", &first)?;
+            }
+        }
+        if let Some(brand) = &self.0.research_brand {
+            map.serialize_entry("brand", &IdentityUrl(brand))?;
+        }
+        if !self.0.programme_members.is_empty() {
+            map.serialize_entry(
+                "http://purl.org/dc/terms/hasPart",
+                &Sequence(
+                    self.0
+                        .programme_members
+                        .iter()
+                        .map(|member| IdentityUrl(member)),
+                ),
+            )?;
+        }
+        if self.0.project.visibility == gazette_core::publication::Visibility::Public
+            && let Some(repository) = &self.0.project.repository
+            && (self.0.project.kind == Some(ProjectKind::SoftwareApplication)
+                || self.0.project.source.is_some())
+            && self.0.project.kind != Some(ProjectKind::SoftwareSourceCode)
+        {
+            map.serialize_entry(
+                "http://purl.org/dc/terms/relation",
+                &SoftwareSource {
+                    project: self.0,
+                    repository,
+                    described: self.1,
+                },
+            )?;
         }
         let external = self
             .0
@@ -38,21 +86,51 @@ impl Serialize for Project<'_, '_> {
                         .is_some_and(|route| route.public_url == *url)
                 })
             });
-        if !self.0.works.is_empty() || external.is_some() {
-            map.serialize_entry(
-                "subjectOf",
-                &Works(&self.0.works, external, self.0.code_documentation.as_ref()),
-            )?;
+        if !self.0.works.is_empty() || external.is_some() || !self.0.project.papers.is_empty() {
+            map.serialize_entry("subjectOf", &Works(self.0, external))?;
         }
         map.end()
     }
 }
 
-struct Works<'a, 'data>(
-    &'a [crate::authored::ContentView<'data>],
-    Option<&'a str>,
-    Option<&'a crate::authored::ProjectDocumentation>,
-);
+struct SoftwareSource<'a, 'data> {
+    project: &'a ProjectView<'data>,
+    repository: &'a str,
+    described: &'a Described,
+}
+
+impl Serialize for SoftwareSource<'_, '_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map = serializer.serialize_map(None)?;
+        map.serialize_entry("@id", &self.repository)?;
+        map.serialize_entry("@type", "SoftwareSourceCode")?;
+        map.serialize_entry("codeRepository", &self.repository)?;
+        let relationship = if self.project.project.kind == Some(ProjectKind::SoftwareApplication) {
+            "targetProduct"
+        } else {
+            "about"
+        };
+        map.serialize_entry(relationship, &IdentityUrl(&self.project.identity))?;
+        if let Some(source) = &self.project.project.source {
+            map.serialize_entry("license", &IdentityUrl(&source.license_url))?;
+            map.serialize_entry("citation", &IdentityUrl(&source.citation_url))?;
+        }
+        for (property, credit) in [
+            ("author", &self.project.source_author),
+            ("copyrightHolder", &self.project.source_rights_holder),
+        ] {
+            if let Some((principal, website)) = credit {
+                map.serialize_entry(
+                    property,
+                    &PrincipalNode(principal, website.as_ref()).within(Some(self.described)),
+                )?;
+            }
+        }
+        map.end()
+    }
+}
+
+struct Works<'a, 'data>(&'a ProjectView<'data>, Option<&'a str>);
 
 #[derive(Serialize)]
 struct DocumentationWork<'a> {
@@ -63,25 +141,42 @@ struct DocumentationWork<'a> {
     url: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
     name: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    about: Option<IdentityUrl<'a>>,
 }
 
 impl Serialize for Works<'_, '_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut sequence = serializer.serialize_seq(None)?;
-        for work in self.0 {
+        for work in &self.0.works {
             sequence.serialize_element(&super::Content(
                 work.node,
                 work.resolved_route,
                 work.listing,
             ))?;
         }
+        for paper in &self.0.project.papers {
+            sequence.serialize_element(&DocumentationWork {
+                identity: &paper.url,
+                kind: "ScholarlyArticle",
+                url: &paper.url,
+                name: Some(&paper.name),
+                about: Some(IdentityUrl(&self.0.identity)),
+            })?;
+        }
         if let Some(url) = self.1 {
-            if let Some(page) = self.2.filter(|page| page.public_url == url) {
+            if let Some(page) = self
+                .0
+                .code_documentation
+                .as_ref()
+                .filter(|page| page.public_url == url)
+            {
                 sequence.serialize_element(&DocumentationWork {
                     identity: url,
                     kind: "WebPage",
                     url,
                     name: page.title.as_deref(),
+                    about: None,
                 })?;
             } else {
                 // The declaration alone establishes help, not the external work's kind or title.

@@ -2,7 +2,7 @@
 
 use super::{DocumentationCatalog, serialization::encode};
 use gazette_compiler::{
-    authored::{LlmsDocument, LlmsPage, ResolvedAuthored},
+    authored::{LlmsDocument, LlmsPage, LlmsReadingSection, ResolvedAuthored},
     workspace::{LlmsCoverage, SearchConfiguration, SearchField},
 };
 use gazette_core::{
@@ -177,6 +177,9 @@ impl Serialize for Indexed<'_> {
             match field {
                 SearchField::Title => map.serialize_entry("title", self.reading.label)?,
                 SearchField::Route => map.serialize_entry("route", &self.reading.url)?,
+                SearchField::Body if self.selection.reuse_body() => {
+                    map.serialize_entry("body", &true)?
+                }
                 SearchField::Body => map.serialize_entry(
                     "body",
                     self.reading.entry.page.body_text.as_deref().unwrap_or(""),
@@ -268,6 +271,61 @@ pub(super) fn extend_llms(
     authored: &ResolvedAuthored<'_, '_>,
     maximum: usize,
 ) -> Result<(), render::Error> {
+    if document.coverage == LlmsCoverage::Navigation {
+        let Some(catalog) = catalog else {
+            return Ok(());
+        };
+        let Some(base) = catalog.canonical_base() else {
+            return Ok(());
+        };
+        let modules = &authored
+            .content()
+            .compilation()
+            .workspace
+            .documentation_repository(catalog.site())
+            .and_then(|repository| repository.build.as_ref())
+            .ok_or_else(|| invalid("documentation guide requires its configured modules"))?
+            .modules;
+        let mut openings = std::collections::BTreeMap::new();
+        for reading in readings(Some(catalog), authored)? {
+            let introduction = reading
+                .project
+                .resources
+                .as_ref()
+                .and_then(|resources| resources.code_documentation.as_deref());
+            if introduction == Some(reading.canonical_url.as_str()) {
+                openings.entry(&reading.project.id).or_insert_with(|| {
+                    documentation_page(
+                        reading
+                            .project
+                            .name
+                            .as_deref()
+                            .unwrap_or(reading.label)
+                            .to_owned(),
+                        reading.url,
+                    )
+                });
+            }
+        }
+        let mut pages: Vec<_> = modules
+            .iter()
+            .filter_map(|module| openings.remove(&module.project))
+            .collect();
+        let canonical = format!("{}llms.txt", base.as_str());
+        let index = authored
+            .preview_public_link(&canonical)
+            .map_err(|_| invalid("documentation index requires a safe public address"))?
+            .unwrap_or(canonical);
+        pages.push(documentation_page(
+            "Full developer documentation index".to_owned(),
+            index,
+        ));
+        document.sections.push(LlmsReadingSection {
+            title: "Developer docs".to_owned(),
+            pages,
+        });
+        return check_llms_model(document, maximum);
+    }
     if document.coverage != LlmsCoverage::AllPages {
         return Ok(());
     }
@@ -280,17 +338,7 @@ pub(super) fn extend_llms(
                 "documentation reading address collides with another llms page",
             ));
         }
-        let page = LlmsPage {
-            id: None,
-            title: reading.label.to_owned(),
-            description: None,
-            url: reading.url.clone(),
-            html_url: reading.url,
-            page_number: None,
-            page_count: None,
-            listing_variant: None,
-            listing_direction: None,
-        };
+        let page = documentation_page(reading.label.to_owned(), reading.url);
         let bytes = encode(&page, remaining, "documentation llms bytes")?;
         remaining = remaining
             .checked_sub(bytes.len())
@@ -299,6 +347,20 @@ pub(super) fn extend_llms(
     }
     document.pages.sort_by(|a, b| a.url.cmp(&b.url));
     check_llms_model(document, maximum)
+}
+
+fn documentation_page(title: String, url: String) -> LlmsPage {
+    LlmsPage {
+        id: None,
+        title,
+        description: None,
+        url: url.clone(),
+        html_url: url,
+        page_number: None,
+        page_count: None,
+        listing_variant: None,
+        listing_direction: None,
+    }
 }
 
 fn check_llms_model(document: &LlmsDocument, maximum: usize) -> Result<(), render::Error> {

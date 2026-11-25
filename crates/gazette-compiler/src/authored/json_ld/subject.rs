@@ -4,7 +4,10 @@ use super::{Described, PrincipalNode, identity};
 use crate::authored::SubjectView;
 use serde::{Serialize, Serializer, ser::SerializeMap};
 
-pub(super) struct MainEntity<'a, 'b>(pub(super) &'a SubjectView<'b>, pub(super) Option<&'a Described>);
+pub(super) struct MainEntity<'a, 'b>(
+    pub(super) &'a SubjectView<'b>,
+    pub(super) Option<&'a Described>,
+);
 
 impl Serialize for MainEntity<'_, '_> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {

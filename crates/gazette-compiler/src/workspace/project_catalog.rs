@@ -153,6 +153,23 @@ pub(super) fn resolve(
                 &through.content,
             );
         }
+        if let Some(source) = &project.source
+            && workspace.principal(&source.author).is_none_or(|principal| {
+                principal.kind != gazette_core::publication::PrincipalKind::Person
+            })
+        {
+            failure(errors, "project_source_author", &project.id, &source.author);
+        }
+        if let Some(source) = &project.source
+            && workspace.principal(&source.rights_holder).is_none()
+        {
+            failure(
+                errors,
+                "project_source_rights_holder",
+                &project.id,
+                &source.rights_holder,
+            );
+        }
         projects.insert(project.id.clone(), project);
     }
     for (landing, project) in authored {

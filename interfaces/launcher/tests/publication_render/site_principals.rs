@@ -130,7 +130,7 @@ fn exercise(explicit_author: bool) {
     let authored = resolved.authored();
     let discovery = authored.discovery().expect("same discovery policy");
     for (id, path, author) in [
-        ("collection:home", "index.html", Some("person:default")),
+        ("collection:home", "index.html", None),
         (
             "content:one",
             "guide/index.html",
@@ -288,7 +288,7 @@ fn exercise(explicit_author: bool) {
 }
 
 #[test]
-fn configured_default_author_applies_to_published_collection_but_not_draft_page() {
+fn configured_default_author_leaves_collections_and_drafts_unsigned() {
     exercise(false);
 }
 

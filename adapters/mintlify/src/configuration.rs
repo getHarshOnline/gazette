@@ -125,7 +125,9 @@ pub(crate) fn encode<'a>(
         name: config.name,
         seo: (config.public_base_url.is_some() || config.usage.is_some()).then(|| Seo {
             metatags: Metatags {
-                canonical: config.public_base_url.map(|base| base.as_str()),
+                canonical: config
+                    .public_base_url
+                    .map(|base| base.as_str().trim_end_matches('/')),
                 tdm_reservation: config.usage.map(|_| "1"),
                 tdm_policy: config.usage.map(|usage| usage.terms_url.as_str()),
             },

@@ -27,6 +27,7 @@ impl ResolvedAuthored<'_, '_> {
             },
             content: Some(target.id.clone()),
             site: Some(target.site.clone()),
+            site_name: None,
             relationships: Vec::new(),
             presentation: self
                 .content()

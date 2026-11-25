@@ -1,5 +1,6 @@
 //! Static component presentation over already resolved data and captured templates.
 
+use gazette_compiler::{html::Limits, theme::ComponentSemantic};
 use gazette_core::markdown::{ComponentBinding, Error, Fragment};
 use gazette_ports::markdown::ComponentRenderer;
 use serde::Serialize;
@@ -37,6 +38,7 @@ struct Component<'a> {
 struct Body<'a> {
     html: &'a str,
     text: &'a str,
+    link_destinations: &'a [String],
 }
 
 impl ComponentRenderer for CompiledTheme {
@@ -75,6 +77,7 @@ impl ComponentRenderer for CompiledTheme {
                 body: Body {
                     html: &body.html,
                     text: &body.text,
+                    link_destinations: &body.link_destinations,
                 },
                 excerpt,
             },
@@ -92,31 +95,39 @@ impl ComponentRenderer for CompiledTheme {
             .render(&definition.template, &context)
             .map_err(|_| failure())?;
         let output = String::from_utf8(output).map_err(|_| failure())?;
-        if !excerpt
-            && let Some(semantic) = &definition.semantic
-            && !matches!(
-                semantic,
-                gazette_compiler::theme::ComponentSemantic::ContainerContents
-            )
-        {
-            let validate = match semantic {
-                gazette_compiler::theme::ComponentSemantic::Figure
-                | gazette_compiler::theme::ComponentSemantic::FigureCaption => {
-                    gazette_compiler::markdown::validate_figure_html
+        if !excerpt && let Some(semantic) = &definition.semantic {
+            type Validator = fn(
+                &ComponentBinding,
+                &ComponentSemantic,
+                &Fragment,
+                &str,
+                Limits,
+            ) -> Result<(), Error>;
+            let validate: Option<Validator> = match semantic {
+                ComponentSemantic::Figure | ComponentSemantic::FigureCaption => {
+                    Some(gazette_compiler::markdown::validate_figure_html)
                 }
-                _ => gazette_compiler::markdown::validate_faq_html,
+                ComponentSemantic::Faq | ComponentSemantic::FaqItem { .. } => {
+                    Some(gazette_compiler::markdown::validate_faq_html)
+                }
+                ComponentSemantic::Catalogue
+                | ComponentSemantic::CatalogueEntry
+                | ComponentSemantic::NavigationAction
+                | ComponentSemantic::ContainerContents => None,
             };
-            validate(
-                binding,
-                semantic,
-                body,
-                &output,
-                gazette_compiler::html::Limits {
-                    input_bytes: self.evidence().limits.output_bytes,
-                    decoded_bytes: self.evidence().limits.output_bytes,
-                    ..Default::default()
-                },
-            )?;
+            if let Some(validate) = validate {
+                validate(
+                    binding,
+                    semantic,
+                    body,
+                    &output,
+                    Limits {
+                        input_bytes: self.evidence().limits.output_bytes,
+                        decoded_bytes: self.evidence().limits.output_bytes,
+                        ..Default::default()
+                    },
+                )?;
+            }
         }
         if excerpt || definition.interaction.is_none() {
             return Ok(output);

@@ -227,6 +227,7 @@ fn actual_item_markup_must_keep_the_question_and_answer_words() {
         .unwrap()
         .remove(0);
     let answer = Fragment {
+        link_destinations: Vec::new(),
         html: "<p>Keep <strong>this</strong> answer.</p>\n".into(),
         text: "Keep this answer.\n".into(),
     };
@@ -398,6 +399,7 @@ fn faq_word_agreement_keeps_inline_words_and_native_block_boundaries() {
         question_argument: "prompt".into(),
     };
     let body = Fragment {
+        link_destinations: Vec::new(),
         html: "<p>A pre<strong>fix</strong>.</p><p>Next paragraph.</p>".into(),
         text: "A prefix.\nNext paragraph.".into(),
     };
@@ -424,6 +426,7 @@ fn faq_word_agreement_keeps_inline_words_and_native_block_boundaries() {
         .is_err()
     );
     let group = Fragment {
+        link_destinations: Vec::new(),
         html: good.into(),
         text: String::new(),
     };

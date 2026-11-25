@@ -338,6 +338,7 @@ fn tera_components_receive_only_the_compiler_owned_semantic_host_context() {
         &theme,
         &binding,
         &Fragment {
+            link_destinations: Vec::new(),
             html: "<p>Body</p>".into(),
             text: "Body".into(),
         },
@@ -650,7 +651,7 @@ fn actual_compiled_faq_template_refuses_changed_or_missing_authored_wording() {
         let theme = metadata.compile_templates(&gazette_adapter_tera::Compiler, Default::default()).unwrap();
         let location = Location { span: Span {start:0,end:9}, precision:Precision::Construct };
         let binding = ComponentBinding { container_contents: None, reading_prefix: None, presentation_only:false, occurrence:Directive {location,header:location,info:"notice".into(),emitted:true},name:"notice".parse().unwrap(),arguments:BTreeMap::from([("question".into(),serde_json::json!("What & why?"))]),context:None };
-        let body = Fragment {html:"<p>The <strong>authored</strong> answer.</p>".into(),text:"The authored answer.".into()};
+        let body = Fragment {link_destinations: Vec::new(), html:"<p>The <strong>authored</strong> answer.</p>".into(),text:"The authored answer.".into()};
         let result = ComponentRenderer::render(&theme, &binding, &body, false);
         assert_eq!(result.is_ok(), accepted, "{result:?}");
         if accepted { assert!(result.unwrap().contains("What &amp; why?")); }

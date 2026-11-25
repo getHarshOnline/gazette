@@ -24,6 +24,9 @@ pub struct SearchSelection {
     /// Nonempty distinct native ranking fields, independent of retained result metadata.
     #[schemars(schema_with = "fields_schema")]
     pub fields: Vec<SearchField>,
+    /// Use the retained body for ranking without serializing the text twice.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub reuse_body: bool,
 }
 
 fn fields_schema(generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
@@ -58,6 +61,11 @@ pub enum SearchField {
 }
 
 impl SearchConfiguration {
+    /// Whether to encode the selected ranking body as a reference to the retained body.
+    pub fn reuse_body(&self) -> bool {
+        matches!(self, Self::Selection(selection) if selection.reuse_body)
+    }
+
     /// Selected token processing, shared by native output and browser presentation.
     pub fn profile(&self) -> SearchProfile {
         match self {

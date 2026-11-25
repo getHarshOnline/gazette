@@ -21,7 +21,15 @@ pub(super) struct SiteDeclaration {
 struct BrandIdentity {
     id: Key,
     #[serde(default)]
+    description: Option<String>,
+    #[serde(default)]
     parent: Option<Key>,
+    #[serde(default)]
+    owner: Option<Key>,
+    #[serde(default)]
+    subject: Option<Key>,
+    #[serde(default)]
+    projects: Vec<Key>,
 }
 
 /// A short site's brand name is beside its identity table, not inside it.
@@ -159,13 +167,22 @@ impl<'de> Deserialize<'de> for SiteDeclaration {
                         id: format!("brand:{}", site.id)
                             .parse()
                             .map_err(D::Error::custom)?,
+                        description: None,
                         parent: None,
+                        owner: None,
+                        subject: None,
+                        projects: Vec::new(),
                     },
                 };
                 Some(Brand {
                     id: identity.id,
                     name: serde_json::from_value(name).map_err(D::Error::custom)?,
+                    description: identity.description,
                     parent: identity.parent,
+                    owner: identity.owner,
+                    identity: None,
+                    subject: identity.subject,
+                    projects: identity.projects,
                     publications: vec![publication],
                 })
             }

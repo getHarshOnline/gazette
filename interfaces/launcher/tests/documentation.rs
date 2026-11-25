@@ -776,7 +776,7 @@ fn configured_modules_share_one_capture_and_match_cli_staged_bytes() {
     assert_eq!(docs["name"], "Configured publication");
     assert_eq!(
         docs["seo"]["metatags"]["canonical"],
-        "https://docs.example.test/reference/"
+        "https://docs.example.test/reference"
     );
     assert_typedoc_navigation(&docs);
     for group in project_dropdowns(&docs) {

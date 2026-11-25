@@ -34,6 +34,21 @@ pub(super) fn validate_catalog<'a>(
         return;
     }
     for project in projects.values() {
+        if let Some(programme) = &project.programme
+            && (!known.contains(programme)
+                || programme == &project.id
+                || projects.get(programme).is_some_and(|parent| {
+                    parent.kind != Some(gazette_core::publication::ProjectKind::ResearchProject)
+                        || parent.programme.is_some()
+                }))
+        {
+            report(
+                errors,
+                "workspace_project_programme",
+                "projects.programme",
+                Some(&project.id),
+            );
+        }
         if let Some(upstream) = project.origin.as_ref().and_then(|origin| origin.upstream())
             && !known.contains(upstream)
         {
@@ -88,6 +103,31 @@ pub(super) fn validate_facts<'a>(
     errors: &mut Vec<Diagnostic>,
 ) {
     for project in projects {
+        let mut paper_urls = BTreeSet::new();
+        if project.papers.iter().any(|paper| {
+            paper.name.trim().is_empty()
+                || !valid_identity(&paper.url)
+                || !paper_urls.insert(&paper.url)
+        }) {
+            report(
+                errors,
+                "workspace_project_paper",
+                "projects.papers",
+                Some(&project.id),
+            );
+        }
+        if let Some(source) = &project.source
+            && (project.repository.is_none()
+                || !valid_identity(&source.license_url)
+                || !valid_identity(&source.citation_url))
+        {
+            report(
+                errors,
+                "workspace_project_source",
+                "projects.source",
+                Some(&project.id),
+            );
+        }
         if project
             .identity
             .as_ref()
@@ -157,7 +197,7 @@ pub(super) fn validate_facts<'a>(
     }
 }
 
-fn valid_identity(value: &str) -> bool {
+pub(super) fn valid_identity(value: &str) -> bool {
     if !super::repositories::valid(value) {
         return false;
     }
@@ -210,6 +250,38 @@ pub(super) fn validate_identities(
         }
     }
     let mut errors = Vec::new();
+    for brand in content.compilation().workspace.brands() {
+        let mut register = |identity: String| {
+            if let Some(other) = identities.insert(identity_key(&identity), brand.id.clone()) {
+                errors.push(Diagnostic {
+                    code: "publication_identity_collision",
+                    source: brand.id.clone(),
+                    target: Some(other),
+                });
+            }
+        };
+        if let Some(identity) = &brand.identity {
+            register(identity.clone());
+        }
+        for publication in &brand.publications {
+            if let Some(route) = publication
+                .home
+                .as_ref()
+                .filter(|home| {
+                    content
+                        .graph()
+                        .node(home)
+                        .is_some_and(|node| node.site == publication.site)
+                })
+                .and_then(|home| content.route(home))
+            {
+                register(format!("{}#website", route.public_url));
+                if brand.identity.is_none() {
+                    register(format!("{}#brand", route.public_url));
+                }
+            }
+        }
+    }
     for project in content.projects() {
         let route = project
             .resources

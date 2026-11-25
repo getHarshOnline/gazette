@@ -201,7 +201,7 @@ Native `gazette check` and MCP `check_workspace` use the same configured corpus 
 
 ### Social-card renderer
 
-An optional root-level `social_card_renderer` binds the exact Node and browser executables used by Gazette's fixed capture helper. Each field is a `PinnedExecutable`: an absolute `program` path and an `executable` table with the file's positive byte length, at most 256 MiB, and complete SHA-256. Both pins use the existing native command validation. Neither executable is found through `PATH`, and selecting them grants no execution permission.
+An optional root-level `social_card_renderer` binds the exact Node and browser executables used by Gazette's fixed capture helper. Each field is a `PinnedExecutable`: an absolute `program` path and an `executable` table with the file's positive byte length, at most 256 MiB, and complete SHA-256. Both pins use the existing native command validation. Neither executable is found through `PATH`, and selecting them grants no execution permission. A renderer can set `jpeg_quality` from 1 to 100 for compressed JPEG thumbnails. Without that selection the renderer emits PNG.
 
 The binding has exactly two fields, `node` and `browser`. It accepts no caller arguments, environment, working directory, source binding or helper entrypoint. Helper bytes are embedded engine inputs; selecting a renderer does not add a workspace source. A split workspace may declare the binding in one included configuration document. Two declarations fail even when equal, so document order cannot select a different executable. Pins establish executable-byte identity, not the identity of shared libraries, fonts or other ambient runtime inputs.
 

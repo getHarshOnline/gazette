@@ -37,7 +37,7 @@ pub struct SiteView<'a> {
     /// Site-scoped rights selection, independent from this page's attribution.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rights_holder: Option<&'a Key>,
-    /// Publication's author default, applied only to unattributed published pages.
+    /// Publication's author default, applied only to unattributed published articles.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_author: Option<&'a Key>,
     /// Exact site-scoped responsibilities, independent of page attribution.
@@ -88,6 +88,33 @@ pub struct ProjectView<'a> {
     pub code_documentation: Option<super::ProjectDocumentation>,
     /// Exact configured project, retaining independent state axes.
     pub project: &'a Project,
+    /// Description from this subject's owning landing.
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub(super) description: Option<&'a str>,
+    /// Public entity identities of the parent programme and its declared members.
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub(super) programme: Option<String>,
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub(super) programme_members: Vec<String>,
+    /// Public brand identities joined from the workspace portfolio.
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub(super) portfolio_brands: Vec<String>,
+    /// The brand represented by this research programme.
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub(super) research_brand: Option<String>,
+    /// Credit from the project's source citation, with its resolved public profile.
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub(super) source_author: Option<(&'a Principal, Option<super::PrincipalWebsiteView>)>,
+    /// Independently declared source rights holder and its public website.
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub(super) source_rights_holder: Option<(&'a Principal, Option<super::PrincipalWebsiteView>)>,
     /// Existing final relationship and declaration origins; no second inheritance pass.
     pub relationship: &'a ProjectLink,
     /// Explicit project landing, not a fallback to its documentation or mentions index.
@@ -215,6 +242,10 @@ pub struct PageData<'a> {
     pub classifications: Vec<super::ClassificationView<'a>>,
     /// Identity, publisher and explicit responsibilities from the bound home site.
     pub site: SiteView<'a>,
+    /// The public brand graph for a bound homepage or About page.
+    #[serde(skip)]
+    #[schemars(skip)]
+    pub(super) brand_graph: Option<super::brand_graph::BrandGraph<'a>>,
     /// Source-owned selected discussion binding; provider readiness is separate.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub discussion: Option<super::DiscussionView<'a>>,
@@ -935,6 +966,66 @@ impl ResolvedAuthored<'_, '_> {
             .filter(|edge| eligible(&edge.target))
             .map(|edge| node(&edge.target))
             .collect::<Result<_, _>>()?;
+        let public_project_identity = |project: &Project| {
+            let landing = project.resources.as_ref()?.landing.as_ref()?;
+            if project.visibility != gazette_core::publication::Visibility::Public
+                || discovery.is_some_and(|selected| !selected.contains(landing))
+            {
+                return None;
+            }
+            Some(super::public_identity::project(
+                project,
+                Some(self.content.route(landing)?),
+            ))
+        };
+        let source_credit = |id: &Key| {
+            let principal = self.content.compilation().workspace.principal(id)?;
+            Some((
+                principal,
+                self.content.principal_website(principal, &content.site),
+            ))
+        };
+        for item in rendered
+            .components
+            .iter_mut()
+            .filter_map(|component| component.catalogue.as_mut())
+            .flatten()
+        {
+            let Some(destination) = item.destination.as_ref() else {
+                continue;
+            };
+            if discovery.is_some_and(|selected| !selected.contains(destination)) {
+                continue;
+            }
+            let (Some(node), Some(route)) =
+                (graph.node(destination), self.content.route(destination))
+            else {
+                continue;
+            };
+            if node.lifecycle != gazette_core::publication::ContentLifecycle::Published {
+                continue;
+            }
+            let project = self.content.projects().find(|project| {
+                project.visibility == gazette_core::publication::Visibility::Public
+                    && project
+                        .resources
+                        .as_ref()
+                        .and_then(|resources| resources.landing.as_ref())
+                        == Some(destination)
+            });
+            let (identity, kind) = match project {
+                Some(project) => (
+                    super::public_identity::project(project, Some(route)),
+                    super::public_identity::project_type(project.kind),
+                ),
+                None => (
+                    super::public_identity::work(node, Some(route), false),
+                    super::public_identity::work_type(node, false, self.content.is_listing(node)),
+                ),
+            };
+            item.identity = Some(identity);
+            item.kind = Some(kind);
+        }
         let projects = graph
             .project_relations(id)
             .into_iter()
@@ -956,6 +1047,38 @@ impl ResolvedAuthored<'_, '_> {
                     works: self.project_works(project, discovery)?,
                     code_documentation: None,
                     project,
+                    description: project
+                        .resources
+                        .as_ref()
+                        .and_then(|resources| resources.landing.as_ref())
+                        .and_then(|id| graph.node(id))
+                        .and_then(|node| node.description.as_deref()),
+                    programme: project
+                        .programme
+                        .as_ref()
+                        .and_then(|id| self.content.project(id))
+                        .and_then(public_project_identity),
+                    programme_members: if project.kind
+                        == Some(gazette_core::publication::ProjectKind::ResearchProject)
+                    {
+                        self.content
+                            .projects()
+                            .filter(|member| member.programme.as_ref() == Some(&project.id))
+                            .filter_map(public_project_identity)
+                            .collect()
+                    } else {
+                        Vec::new()
+                    },
+                    portfolio_brands: super::brand_graph::portfolio_brands(self.content(), project),
+                    research_brand: super::brand_graph::research_brand(self.content(), project),
+                    source_author: project
+                        .source
+                        .as_ref()
+                        .and_then(|source| source_credit(&source.author)),
+                    source_rights_holder: project
+                        .source
+                        .as_ref()
+                        .and_then(|source| source_credit(&source.rights_holder)),
                     relationship,
                     landing: self.project_landing_for(project, content)?,
                     resources: self.resources_for_project(project, content)?,
@@ -1072,6 +1195,7 @@ impl ResolvedAuthored<'_, '_> {
             body_text,
             summary: rendered.summary,
             data: PageData {
+                brand_graph: super::brand_graph::graph(self.content(), &site.id, id),
                 container_contents_placed: rendered.container_contents_placed,
                 invitations: self.page_invitations(content)?,
                 preferred_source: self

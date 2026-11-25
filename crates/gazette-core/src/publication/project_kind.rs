@@ -13,6 +13,8 @@ pub enum ProjectKind {
     SoftwareSourceCode,
     /// An authored work whose more specific form is not declared.
     CreativeWork,
+    /// A book, including a graphic novel while it is in development.
+    Book,
     /// A collection of works or other items, distinct from its presenting page.
     Collection,
     /// An organizational undertaking directed toward an aim, not its output.

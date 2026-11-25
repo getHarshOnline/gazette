@@ -129,9 +129,11 @@ export async function capture(value, assetRoot = root) {
     await Promise.all(tasks);
     const finalTitle = await evaluate('document.querySelector("[data-social-card-title]").textContent');
     requireThat(finalTitle === prepared.title, 'changed-title');
-    const { data } = await send('Page.captureScreenshot', { format: 'png', fromSurface: true, captureBeyondViewport: false, clip: { x: 0, y: 0, width: input.width, height: input.height, scale: 1 } });
+    const encoding = input.jpeg_quality === undefined
+      ? { format: 'png' } : { format: 'jpeg', quality: input.jpeg_quality };
+    const { data } = await send('Page.captureScreenshot', { ...encoding, fromSurface: true, captureBeyondViewport: false, clip: { x: 0, y: 0, width: input.width, height: input.height, scale: 1 } });
     if (failed) throw failed;
-    const result = JSON.stringify({ version: 1, request_sha256: input.request_sha256, title: finalTitle, png_base64: data });
+    const result = JSON.stringify({ version: 1, request_sha256: input.request_sha256, title: finalTitle, [`${encoding.format}_base64`]: data });
     requireThat(Buffer.byteLength(result) <= input.limits.max_output_bytes, 'output-limit');
     return result;
   };

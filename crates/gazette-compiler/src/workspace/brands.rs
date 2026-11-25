@@ -14,9 +14,24 @@ pub struct Brand {
     pub id: Key,
     /// Explicit display name; never an identity join or a repository-name default.
     pub name: String,
+    /// Public description of the brand’s role, distinct from the publication description.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
     /// Explicit brand parent only; this supplies no legal role or author defaults.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parent: Option<Key>,
+    /// Principal who owns this brand. This is independent of the site's publisher.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub owner: Option<Key>,
+    /// Public identity for a brand without its own routed home.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub identity: Option<String>,
+    /// The work or programme this brand represents.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subject: Option<Key>,
+    /// Projects grouped under this brand in its portfolio.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub projects: Vec<Key>,
     /// Publication settings owned here, rather than copied into each adapter.
     #[serde(default)]
     pub publications: Vec<BrandPublication>,
@@ -38,6 +53,9 @@ pub struct BrandPublication {
     /// Exact same-site routed home content, never a guessed root or navigation entry.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub home: Option<Key>,
+    /// Exact About page whose primary subject is the selected brand.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub about: Option<Key>,
     /// Optional address rules for content with an explicit readable slug.
     #[serde(
         default,
@@ -171,6 +189,18 @@ pub(super) fn validate(brands: &BTreeMap<Key, Brand>, errors: &mut Vec<super::Di
             && !brands.contains_key(parent)
         {
             report(errors, "workspace_reference", &parent_field, Some(parent));
+        }
+        if brand
+            .identity
+            .as_ref()
+            .is_some_and(|url| !super::repositories::valid(url))
+        {
+            report(
+                errors,
+                "workspace_brand_identity",
+                "brands.identity",
+                Some(&brand.id),
+            );
         }
         for publication in &brand.publications {
             let field = format!(
@@ -417,6 +447,8 @@ pub enum LlmsCoverage {
     /// Preserve the explicit section and content order.
     #[default]
     Curated,
+    /// Use the publication's configured navigation order.
+    Navigation,
     /// Every eligible built page and generated reading view, in serving-URL order.
     AllPages,
 }

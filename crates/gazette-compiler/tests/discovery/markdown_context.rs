@@ -129,6 +129,47 @@ fn destinations(markdown: &str) -> Vec<String> {
 }
 
 #[test]
+fn alternate_preserves_subject_source_credit_as_distinct_from_page_authorship() {
+    let (mut config, mut files) = fixture(&[]);
+    config = config.replace(
+        "id='principal:publisher'\nkind='person'",
+        "id='principal:publisher'\nkind='organization'\nname='Paper Press'",
+    );
+    config.push_str(
+        "\n[[principals]]\nid='person:developer'\nkind='person'\nname='Ada Maintainer'\n\
+         website={kind='external',url='https://author.test/about/'}\n\
+         [[projects]]\nid='project:engine'\nkind='software-application'\nname='Paper Engine'\n\
+         lifecycle='active'\nvisibility='public'\navailability='available'\n\
+         repository='https://code.test/paper'\n\
+         source={license_url='https://code.test/paper/license',citation_url='https://code.test/paper/citation',author='person:developer',rights_holder='principal:publisher'}\n",
+    );
+    for (path, source) in &mut files {
+        let relation = match path.as_str() {
+            "home/m.md" => "about",
+            "home/a.md" => "mentions",
+            _ => continue,
+        };
+        *source = attributed(
+            source.replacen(
+                "[content]",
+                &format!("projects=[{{project='project:engine',kind='{relation}'}}]\n[content]"),
+                1,
+            ),
+            "{principal='principal:publisher',role='rights-holder'}",
+        );
+    }
+    let compilation = workspace::compile(&config, Default::default()).unwrap();
+    let corpus = parse(&files);
+    let owner = authored::resolve(&compilation, &corpus, Default::default()).unwrap();
+    let discovery = owner.discovery().unwrap();
+    let subject = markdown(&owner, &discovery, "content:m");
+    assert!(subject.contains("Rights holder: Paper Press"));
+    assert!(!subject.contains("\nAuthor:"));
+    assert!(subject.contains("Source code for [Paper Engine](https://code.test/paper) is credited to [Ada Maintainer](https://author.test/about/)."));
+    assert!(!markdown(&owner, &discovery, "content:a").contains("Ada Maintainer"));
+}
+
+#[test]
 fn native_collection_subcollection_and_declared_journey_order_use_resolved_public_and_local_links()
 {
     let (config, files) = fixture(&[]);

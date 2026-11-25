@@ -64,9 +64,12 @@ pub(super) fn graph(
             }
         }
         if (!node.keywords.is_empty()
-            || node
-                .schema_type
-                .is_some_and(|kind| kind != super::SchemaType::AboutPage))
+            || node.schema_type.is_some_and(|kind| {
+                !matches!(
+                    kind,
+                    super::SchemaType::AboutPage | super::SchemaType::ProfilePage
+                )
+            }))
             && !matches!(
                 node.structure,
                 ContentKind::Page {

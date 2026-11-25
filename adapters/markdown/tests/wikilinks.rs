@@ -121,6 +121,7 @@ fn native_wikilink_bindings_emit_existing_public_annotations_without_changing_so
         kind: LinkDestinationKind::CrossSite,
         content: Some("content:target".parse().unwrap()),
         site: Some("site:target".parse().unwrap()),
+        site_name: None,
         relationships: vec![LinkRelationship::Related],
         theme: Some("theme:target".parse().unwrap()),
         palette: Some("palette:target".parse().unwrap()),

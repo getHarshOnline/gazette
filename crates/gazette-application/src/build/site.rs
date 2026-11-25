@@ -24,6 +24,9 @@ use super::{
     serialization::{context, encode},
 };
 
+mod json_ld;
+use json_ld::SiteJsonLd;
+
 pub(super) struct SiteRenderContext<'services, 'page> {
     pub capabilities: &'services ResolvedCapabilities,
     pub resources: &'services CompiledResources,
@@ -186,13 +189,6 @@ struct SiteModel<'a> {
     browser_modules: Option<&'a super::resources::BrowserModules>,
     #[serde(skip_serializing_if = "Option::is_none")]
     graph: Option<Value>,
-}
-
-/// Transport only: borrow exact page-model values in the shared canonical order.
-#[derive(Serialize)]
-struct SiteJsonLd<'a> {
-    #[serde(rename = "@graph")]
-    graph: Vec<&'a Value>,
 }
 
 impl CompiledTheme {
@@ -631,7 +627,7 @@ impl CompiledTheme {
                 self.render(template, &value)
                     .map_err(SiteRenderError::Render)?
             } else if llms_configuration.coverage
-                == gazette_compiler::workspace::LlmsCoverage::AllPages
+                != gazette_compiler::workspace::LlmsCoverage::Curated
             {
                 let mut llms = selection
                     .llms_model(
@@ -852,15 +848,22 @@ impl CompiledTheme {
         } else {
             None
         };
+        let (card_path, card_mime, card_media_type) =
+            match social_card.map(|capture| capture.evidence.image.format) {
+                Some(gazette_core::raster::Format::Jpeg) => {
+                    ("assets/social-card.jpg", "image/jpeg", MediaType::Jpeg)
+                }
+                _ => ("assets/social-card.png", "image/png", MediaType::Png),
+            };
         let generated_card = social_card.map(|capture| super::SocialCardProjection {
             url: base.resolve_output(
-                &"/assets/social-card.png"
+                &format!("/{card_path}")
                     .parse::<RoutePath>()
                     .expect("fixed card route"),
             ),
             width: capture.evidence.image.width,
             height: capture.evidence.image.height,
-            media_type: "image/png",
+            media_type: card_mime,
             title: capture.evidence.title.clone(),
             sha256: Sha256Digest::of(&capture.bytes),
         });
@@ -920,7 +923,7 @@ impl CompiledTheme {
                         interaction: islands.model.get(&node.id),
                         chrome: chrome.as_ref(),
                         identity_assets,
-                        social_card: is_card_home.then_some(generated_card.as_ref()).flatten(),
+                        social_card: generated_card.as_ref(),
                     },
                 )
                 .map_err(SiteRenderError::Page)?;
@@ -1011,9 +1014,7 @@ impl CompiledTheme {
                     )));
                 }
                 let capture = social_card.ok_or(SiteRenderError::Configuration)?;
-                let output: EntryPath = "assets/social-card.png"
-                    .parse()
-                    .map_err(SiteRenderError::Output)?;
+                let output: EntryPath = card_path.parse().map_err(SiteRenderError::Output)?;
                 insert(
                     &mut builder,
                     &mut directories,
@@ -1021,7 +1022,7 @@ impl CompiledTheme {
                     output.clone(),
                     capture.bytes.clone(),
                 )?;
-                media_types.insert(output, MediaType::Png);
+                media_types.insert(output, card_media_type);
                 used_card = true;
             }
             if listing_pages
@@ -1346,7 +1347,7 @@ impl CompiledTheme {
                 graph.push(page.get("json_ld").ok_or(SiteRenderError::Configuration)?);
             }
             let bytes = encode(
-                &SiteJsonLd { graph },
+                &SiteJsonLd::from_documents(graph),
                 usize::try_from(builder.file_ceiling()).unwrap_or(usize::MAX),
                 "site JSON-LD bytes",
             )

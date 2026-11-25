@@ -14,7 +14,7 @@ use gazette_core::{
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fmt};
 
-/// Private evidence of the exact request, retained helper and native PNG response.
+/// Private evidence of the exact request, retained helper and native image response.
 #[derive(Clone, Debug, Serialize, schemars::JsonSchema)]
 pub struct SocialCardCaptureEvidence {
     /// Exact consuming publication.
@@ -31,7 +31,7 @@ pub struct SocialCardCaptureEvidence {
     pub response_sha256: Sha256Digest,
     /// Title returned by the fixed helper after authored H1 selection.
     pub title: String,
-    /// Native decoded PNG facts bound to the exact output bytes.
+    /// Native decoded image facts bound to the exact output bytes.
     pub image: raster::Inspection,
     /// Complete successful process exit after retained-tree verification.
     pub exit: process::Exit,
@@ -206,7 +206,8 @@ struct Response {
     version: u8,
     request_sha256: Sha256Digest,
     title: String,
-    png_base64: String,
+    png_base64: Option<String>,
+    jpeg_base64: Option<String>,
 }
 
 fn capture(
@@ -273,6 +274,9 @@ fn capture(
     let mut value = value;
     if let Some(time) = request.recipe.video_time_ms {
         value["video_time_ms"] = time.into();
+    }
+    if let Some(quality) = request.renderer.jpeg_quality {
+        value["jpeg_quality"] = quality.into();
     }
     let input = crate::build::serialization::encode(
         &value,
@@ -365,29 +369,38 @@ fn capture(
         .remaining
         .output_bytes
         .min(generation.options.raster.encoded_bytes);
-    if response.png_base64.len() / 4 * 3 > maximum.saturating_add(2) {
-        return Err(Error::Limit("PNG bytes"));
+    let (format, encoded) = match (
+        request.renderer.jpeg_quality,
+        response.png_base64,
+        response.jpeg_base64,
+    ) {
+        (None, Some(encoded), None) => (raster::Format::Png, encoded),
+        (Some(_), None, Some(encoded)) => (raster::Format::Jpeg, encoded),
+        _ => return Err(Error::Binding("capture response image format")),
+    };
+    if encoded.len() / 4 * 3 > maximum.saturating_add(2) {
+        return Err(Error::Limit("image bytes"));
     }
     let bytes = base64::engine::general_purpose::STANDARD
-        .decode(&response.png_base64)
-        .map_err(|_| Error::Binding("PNG base64"))?;
+        .decode(&encoded)
+        .map_err(|_| Error::Binding("image base64"))?;
     budget.remaining.output_bytes = budget
         .remaining
         .output_bytes
         .checked_sub(bytes.len())
-        .ok_or(Error::Limit("aggregate PNG bytes"))?;
+        .ok_or(Error::Limit("aggregate image bytes"))?;
     let limits = raster::Limits {
         encoded_bytes: maximum,
         width: request.recipe.width.min(generation.options.raster.width),
         height: request.recipe.height.min(generation.options.raster.height),
         ..generation.options.raster
     };
-    let image = raster(raster::Format::Png, &bytes, limits).map_err(Error::Raster)?;
+    let image = raster(format, &bytes, limits).map_err(Error::Raster)?;
     image
-        .validate(raster::Format::Png, &bytes, limits)
+        .validate(format, &bytes, limits)
         .map_err(Error::Raster)?;
     if image.width != request.recipe.width || image.height != request.recipe.height {
-        return Err(Error::Binding("PNG dimensions"));
+        return Err(Error::Binding("image dimensions"));
     }
     Ok(Capture {
         bytes,

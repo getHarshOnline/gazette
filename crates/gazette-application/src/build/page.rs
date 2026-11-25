@@ -393,6 +393,26 @@ impl CompiledTheme {
             .compilation()
             .workspace
             .publication_for(&node.site);
+        let generation = chrome.and_then(|chrome| {
+            let generator = chrome.footer.iter().find(|item| {
+                item.key
+                    .is_some_and(|key| key.as_str() == "base:generator-credit")
+            })?;
+            let theme = |key| {
+                chrome
+                    .regions
+                    .iter()
+                    .find(|(name, value)| name.as_str() == key && !value.is_empty())
+                    .map(|(_, value)| value.as_str())
+            };
+            let theme_repository = theme("base:theme-credit")
+                .and_then(|_| theme("base:theme-repository"))
+                .filter(|url| url.starts_with("https://"));
+            Some((
+                generator.destination.route.public_url.as_str(),
+                theme_repository,
+            ))
+        });
         let json_ld = publication
             .filter(|publication| publication.machine.json_ld)
             .map(|_| match projection_inputs.discovery {
@@ -406,7 +426,8 @@ impl CompiledTheme {
                     }),
                 None => Ok(projection.json_ld().public()),
             })
-            .transpose()?;
+            .transpose()?
+            .map(|projection| projection.with_generation(generation));
         let search = publication
             .filter(|publication| {
                 publication.machine.search.is_some()
@@ -494,7 +515,12 @@ impl CompiledTheme {
                         json_ld: publication
                             .filter(|publication| publication.machine.json_ld)
                             .and_then(|_| projection.listing_json_ld(discovery))
-                            .map(authored::JsonLd::public),
+                            .map(|projection| {
+                                projection
+                                    .public()
+                                    .with_generation(generation)
+                                    .with_authored_actions()
+                            }),
                     },
                     self.evidence().limits.context_bytes,
                     "listing bytes",

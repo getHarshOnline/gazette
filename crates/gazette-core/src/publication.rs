@@ -7,7 +7,8 @@ use serde::{Deserialize, Serialize};
 mod catalog;
 pub use catalog::{
     Principal, PrincipalKind, PrincipalWebsite, Project, ProjectAvailability, ProjectOrigin,
-    ProjectPlacementRole, PublicationRole, PublicationRoleBinding, Taxonomy, TaxonomyTerm,
+    ProjectPlacementRole, ProjectSource, PublicationRole, PublicationRoleBinding, ResearchPaper,
+    Taxonomy, TaxonomyTerm,
 };
 mod capability;
 pub use capability::{CapabilityId, CoreCapabilityCatalog, InvalidCapabilityId};

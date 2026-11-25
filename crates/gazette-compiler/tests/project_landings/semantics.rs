@@ -27,8 +27,14 @@ fn an_index_family_home_without_a_listing_remains_a_web_page() {
     let corpus = parse(&text);
     let resolved = authored::resolve(&config, &corpus, Default::default()).unwrap();
     let value = public(&resolved, "content:one");
-    assert_eq!(value["@type"], "WebPage");
-    assert_eq!(value["about"][0]["subjectOf"][0]["@type"], "WebPage");
+    let graph = value["@graph"].as_array().unwrap();
+    let page = graph
+        .iter()
+        .find(|node| node["identifier"] == "content:one")
+        .unwrap();
+    assert_eq!(page["@type"], "WebPage");
+    assert_eq!(page["about"][0]["subjectOf"][0]["@type"], "WebPage");
+    assert!(graph.iter().any(|node| node["@type"] == "WebSite"));
 }
 
 #[test]

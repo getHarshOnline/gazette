@@ -339,7 +339,7 @@ fn publication_reservation_and_crawler_rules_reach_the_documentation_target() {
         assert_eq!(
             config["seo"]["metatags"],
             json!({
-                "canonical": "https://docs.example.test/",
+                "canonical": "https://docs.example.test",
                 "tdm-reservation": "1",
                 "tdm-policy": "https://site.example.test/terms/"
             })

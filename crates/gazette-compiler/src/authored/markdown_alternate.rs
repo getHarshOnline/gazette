@@ -2,7 +2,10 @@
 
 use std::io::{self, Write};
 
-use gazette_core::publication::content::{AttributionRole, ContentKind, ContentNode};
+use gazette_core::publication::{
+    Visibility,
+    content::{AttributionRole, ContentKind, ContentNode, ProjectRelation},
+};
 
 use super::discovery::{bounded, escaped, plain};
 use super::{
@@ -56,6 +59,27 @@ impl PageProjection<'_> {
                 listing_body(output, listing)?;
             }
             reading_context(output, &self.data, discovery)?;
+            for subject in &self.data.projects {
+                if subject.relationship.relation() == ProjectRelation::About
+                    && subject.project.visibility == Visibility::Public
+                    && let (Some(name), Some(repository), Some((principal, website))) = (
+                        &subject.project.name,
+                        &subject.project.repository,
+                        &subject.source_author,
+                    )
+                    && let Some(author) = &principal.name
+                {
+                    output.write_all(b"\n\nSource code for ")?;
+                    link(output, name, repository)?;
+                    output.write_all(b" is credited to ")?;
+                    if let Some(website) = website {
+                        link(output, author, &website.url)?;
+                    } else {
+                        plain(output, author)?;
+                    }
+                    output.write_all(b".\n")?;
+                }
+            }
             Ok(())
         })
     }

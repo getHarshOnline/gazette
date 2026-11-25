@@ -118,6 +118,26 @@ console.log(JSON.stringify({size:index.size,hits}));"#;
 }
 
 #[test]
+fn selecting_the_retained_body_changes_only_its_ranking_representation() {
+    let fixture = fixture();
+    let legacy = config(&fixture, "['body','title']", false);
+    let compact = legacy.replace(
+        "fields=['body','title']",
+        "fields=['body','title'],reuse_body=true",
+    );
+    let documents = |config| {
+        let inputs = acquire(config);
+        let rendered = render(&inputs).expect("configured search");
+        serde_json::from_slice::<Vec<Value>>(bytes(rendered.site().output(), "search.json"))
+            .unwrap()
+    };
+    let mut actual = documents(&compact);
+    assert_eq!(actual[0]["indexed"]["body"], true);
+    actual[0]["indexed"]["body"] = actual[0]["body"].clone();
+    assert_eq!(actual, documents(&legacy));
+}
+
+#[test]
 fn configured_disabled_graph_never_creates_an_output_and_scope_changes_do_not_delete_notes() {
     let fixture = fixture();
     let inputs = acquire(&config(&fixture, "['title']", false));

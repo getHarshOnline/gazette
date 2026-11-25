@@ -258,6 +258,81 @@ fn explicit_brand_parent_keeps_own_roles_and_contacts_and_native_reference_coord
 }
 
 #[test]
+fn brand_ownership_programmes_and_about_share_canonical_identities() {
+    let config = configuration()
+        .replace("name='Parent publication'", "name='Parent publication'\nowner='owner:one'")
+        .replace(
+            "parent='brand:parent'",
+            "parent='brand:parent'\nowner='owner:one'\nsubject='project:programme'\nprojects=['project:tool']",
+        )
+        .replace(
+            "home='content:two-home'",
+            "home='content:two-home'\nabout='content:two-about'",
+        )
+        + "\n[[projects]]\nid='project:programme'\nname='Programme'\nkind='research-project'\nidentity='https://two.test/#programme'\nlifecycle='active'\nvisibility='public'\navailability='unavailable'\n\
+           [[projects]]\nid='project:tool'\nname='Tool'\nkind='software-application'\nidentity='https://two.test/#tool'\nlifecycle='active'\nvisibility='public'\navailability='unavailable'\n";
+    let compiled = compilation(&config);
+    let mut files = files();
+    files.push((
+        "two/about.md",
+        page("content:two-about", "site:two", "About", Some("/about/"))
+            .replace("kind='article'", "kind='utility'")
+            .replace(
+                "lifecycle='published'",
+                "lifecycle='published'\nschema_type='AboutPage'",
+            ),
+    ));
+    let corpus = corpus(&files);
+    let resolved = authored::resolve(&compiled, &corpus, Default::default()).unwrap();
+    let canonical_brand = "https://two.test/other/home/#brand";
+    for page_id in ["content:two-home", "content:two-about"] {
+        let page = resolved
+            .project_page(&key(page_id), &raster::unavailable, &Comrak)
+            .unwrap();
+        let projected = json!(page.json_ld().public());
+        let graph = projected["@graph"].as_array().unwrap();
+        let brand = graph
+            .iter()
+            .find(|node| node["@id"] == canonical_brand)
+            .unwrap();
+        assert_eq!(brand["@type"], "Brand");
+        assert_eq!(
+            brand["http://purl.org/dc/terms/isPartOf"]["@id"],
+            "https://one.test/mount/welcome/#brand"
+        );
+        assert_eq!(
+            brand["http://purl.org/dc/terms/relation"]["@type"],
+            "ResearchProject"
+        );
+        assert_eq!(
+            brand["http://purl.org/dc/terms/hasPart"][0]["@type"],
+            "SoftwareApplication"
+        );
+        let owner = graph.iter().find(|node| node["brand"].is_array()).unwrap();
+        assert!(
+            owner["brand"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|node| node["@id"] == canonical_brand)
+        );
+        assert_eq!(owner["@type"], "Person");
+        if page_id == "content:two-about" {
+            assert_eq!(graph[0]["mainEntity"]["@id"], canonical_brand);
+            assert_ne!(graph[0]["publisher"]["@id"], owner["@id"]);
+        }
+    }
+    let home = resolved
+        .project_page(&key("content:one-home"), &raster::unavailable, &Comrak)
+        .unwrap();
+    let projected = json!(home.json_ld().public());
+    let graph = projected["@graph"].as_array().unwrap();
+    let owner = graph.iter().find(|node| node["brand"].is_array()).unwrap();
+    assert_eq!(graph[0]["publisher"], json!({"@id": owner["@id"]}));
+    assert_eq!(owner["@type"], "Person");
+}
+
+#[test]
 fn home_uses_validated_preview_serving_route_without_mutating_workspace_or_identity() {
     let compiled = compilation(configuration());
     let before = serde_json::to_value(&compiled).unwrap();
@@ -358,10 +433,9 @@ fn missing_foreign_unrouted_and_excluded_selected_homes_are_exact_binding_failur
             files[0].1 = page("content:one-home", "site:one", "Unrouted home", None);
         }
         let corpus = corpus(&files);
-        let authored::Error::PublicationMetadata(error) =
-            authored::resolve(&compiled, &corpus, Default::default()).unwrap_err()
-        else {
-            panic!("exact metadata error");
+        let error = authored::resolve(&compiled, &corpus, Default::default()).unwrap_err();
+        let authored::Error::PublicationMetadata(error) = error else {
+            panic!("expected a publication metadata error for {replacement}: {error:?}");
         };
         assert_eq!(error.code(), "publication_metadata_binding");
         assert_eq!(error.site, key("site:one"));

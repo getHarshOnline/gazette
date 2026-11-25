@@ -136,6 +136,8 @@ pub enum SchemaType {
     TechArticle,
     /// A utility page whose primary subject is an explicitly named principal.
     AboutPage,
+    /// The identifying profile of one person on their declared website.
+    ProfilePage,
 }
 
 /// Compatibility name for callers that select article contribution types.

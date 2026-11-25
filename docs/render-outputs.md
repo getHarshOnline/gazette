@@ -127,6 +127,8 @@ When selected, `presentation.search` exposes `profile`, `fields`, `route`, `outp
 
 Per-document context limits, a complete-dataset byte limit, and the shared output inventory's file/count/aggregate limits all apply. A collision or limit failure returns no successful partial site and creates no stage. Disabled search emits no record file. Like the other current local outputs, this includes drafts and is not a public-admission result.
 
+With `reuse_body = true`, the selected `indexed.body` is the JSON literal `true`. Consumers resolve it to the unchanged top-level `body` for ranking. Without this opt-in, the ranking field continues to contain a string where selected.
+
 This is implementation-neutral search data, not an executable `window.searchIndex` payload or a prebuilt ranking index. A consumer can search `content.title`, `body`, or explicit project/classification fields. Navigate to `route.url`, which uses the selected serving address, and retain `route.canonical_url` for public identity. The [browser search example](../sdk/js/docs/browser.md#search-the-emitted-corpus) shows how to use those records. Search UI, ranking, query expansion, cross-site acquisition and their permission/performance contracts remain Theme/workspace work; this operation neither installs nor selects a provider.
 
 ### Documentation reading pages

@@ -18,6 +18,9 @@ pub struct PublicationBrand<'a> {
     /// Explicit validated parent; absence is never inferred from shared publication machinery.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent: Option<&'a Key>,
+    /// A parent's public home when its configured publication is unambiguous.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parent_home: Option<&'a str>,
 }
 
 /// Shallow home reference over the selected graph and its already compiled serving address.
@@ -48,6 +51,9 @@ pub struct PublicationMetadata<'a> {
     /// Exact declared routed home, absent when the workspace omitted it.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub home: Option<PublicationHome<'a>>,
+    /// Routed About page that names the brand as its primary subject.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub about: Option<&'a Key>,
     /// Explicit normalized publication language; also supplies omitted page language.
     /// Inheritance does not create an authored source span.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -210,6 +216,33 @@ impl ResolvedContent<'_> {
                 })
             })
             .transpose()?;
+        let about = publication.about.as_ref();
+        if let Some(id) = about {
+            let node = self
+                .graph()
+                .node(id)
+                .ok_or_else(|| error(id, "brand About page is absent"))?;
+            if node.site != site.id
+                || node.schema_type
+                    != Some(gazette_core::publication::content::SchemaType::AboutPage)
+                || node.subject.is_some()
+                || self.route(id).is_none()
+                || home.is_none()
+            {
+                return Err(error(
+                    id,
+                    "brand About must be a routed same-site About page with an unassigned subject and a declared home",
+                ));
+            }
+        }
+        let parent_home = brand.parent.as_ref().and_then(|parent| {
+            let parent = workspace.brands().find(|value| &value.id == parent)?;
+            let [publication] = parent.publications.as_slice() else {
+                return None;
+            };
+            self.route(publication.home.as_ref()?)
+                .map(|route| route.public_url.as_str())
+        });
         Ok(Some(PublicationMetadata {
             site: &site.id,
             rights_holder: site
@@ -221,8 +254,10 @@ impl ResolvedContent<'_> {
                 id: &brand.id,
                 name: &brand.name,
                 parent: brand.parent.as_ref(),
+                parent_home,
             },
             home,
+            about,
             language: publication.language.as_ref(),
             contacts: &publication.contacts,
             social: &publication.social,

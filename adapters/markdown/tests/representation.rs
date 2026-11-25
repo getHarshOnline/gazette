@@ -240,6 +240,7 @@ fn native_markdown_keeps_symbolic_annotations_labels_and_literal_code_distinct()
         kind: LinkDestinationKind::CrossSite,
         content: Some("content:target".parse().unwrap()),
         site: Some("site:target".parse().unwrap()),
+        site_name: Some("Target Publication".into()),
         relationships: vec![LinkRelationship::Related],
         theme: Some("theme:target".parse().unwrap()),
         palette: Some("palette:target".parse().unwrap()),
@@ -248,7 +249,7 @@ fn native_markdown_keeps_symbolic_annotations_labels_and_literal_code_distinct()
     let html = reader_html(&markdown);
     for exact in [
         "href=\"http://127.0.0.1:4312/prefix/one/#part\"",
-        ">R&amp;D | β</a>",
+        ">R&amp;D | β</a> (on Target Publication)",
         "<code>[[site:code.test/x/|Code]]</code>",
     ] {
         assert!(html.contains(exact), "{exact}: {html}");

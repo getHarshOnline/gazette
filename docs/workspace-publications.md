@@ -87,7 +87,7 @@ rights_holder = "example:rights-holder"
 default_author = "example:writer"
 ```
 
-The rights holder may be a person or organisation; `default_author` must name a person. A published content object with no attributions credits that configured default author. Any explicit attribution, including a rights-holder-only declaration, keeps its own meaning and prevents this fallback. Draft and archived objects receive no default author. The resolved graph supplies the same credit to the byline, JSON-LD and other consumers. Selecting a default author is a publication policy choice; it does not turn an agent's draft into that person's published work.
+The rights holder may be a person or organisation; `default_author` must name a person. A published article with no attributions credits that configured default author. Any explicit attribution, including a rights-holder-only declaration, keeps its own meaning and prevents this fallback. Draft and archived objects receive no default author. The resolved graph supplies the same credit to the byline, JSON-LD and other consumers. Selecting a default author is a publication policy choice; it does not turn an agent's draft into that person's published work.
 
 `rights_holder` remains independent site context and supplies no missing content rights claim or licence. Neither field inherits from a publisher or sibling site.
 
@@ -145,6 +145,10 @@ brand = { id = "brand:notes", parent = "brand:journal" }
 
 Here `brand:journal` must be declared elsewhere, using either form. Omit `parent` for an independent brand. The inline table declares the brand; it does not refer to or merge with another declaration of the same ID. It requires the site's `name`, and duplicate brands, missing parents and parent cycles remain errors. Brand parentage supplies no publisher, rights holder or author defaults.
 
+Use `owner` for a declared principal, `parent` for a brand above this brand, `subject` for the project or work that the brand represents, and `projects` for its portfolio. A research programme may have its own brand and its own members. A product can be in the brand's portfolio and in the programme's roadmap. The optional `description` explains the brand's role. In the full form, `identity` gives a brand an explicit public IRI when it has no home or shares an identity across publications.
+
+Set the publication's `about` to a routed same-site `AboutPage` to name the brand as its main entity. Reserve this binding for a page with no other authored primary subject. It requires a declared home. A personal profile or a page about a research programme can continue naming its own subject.
+
 Without `brand`, `site:notes` still creates `brand:site:notes` with no parent. Keep the full form for several publications under one brand. Editor navigation follows inline IDs and parent references to their original source; brand field origins find `id` and `parent` in the inline table and `name` beside it. Use publication-origin queries for the effective publication fields and their defaults.
 
 ### Shared publication settings
@@ -195,6 +199,8 @@ identity_assets = { site_icon = "image:site-icon", link_preview = "image:link-pr
 ```
 
 `authored` is an array of bindings; each `source` references an existing explicit `[[sources]]` declaration. Declaration order is retained. Select owner-held roots explicitly rather than copying their pages into one central source. The singular table form is not accepted. `target` is a logical corpus prefix, not a URL, output folder or inferred project identity. The same `ContentBinding` shape serves project-documentation placements; the owning field supplies its role. Equal or nested prefixes across authored sources and enabled project-document placements fail complete configuration resolution before any native reads. Disabled placements do not reserve a corpus prefix.
+
+To give readers a short route through a publication, set `machine.llms.coverage = "navigation"`. Gazette uses the configured site navigation order and takes titles and descriptions from the selected content. A site with assembled developer manuals also gets a **Developer docs** section with the admitted project guide links and the provider index. Use `curated` with explicit section contents when the introductory path needs a different selection. `all-pages` still supplies a complete reading catalogue. Sitemap, search and feeds have independent selections.
 
 An existing authored or project-document `ContentBinding` may also name `retained_only`, an exact set of source-relative opaque files kept solely as input evidence:
 

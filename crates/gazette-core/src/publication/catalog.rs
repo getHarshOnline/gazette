@@ -108,6 +108,15 @@ pub struct Project {
     /// Omission remains unknown/held; this is never a content licence or permission proof.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub license: Option<ProjectLicense>,
+    /// The research programme this subject belongs to.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub programme: Option<Key>,
+    /// Published credit and reference files for this project's code repository.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<ProjectSource>,
+    /// Published papers produced by this research, with their own identities.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub papers: Vec<ResearchPaper>,
     /// Project-owned discussion settings, never borrowed from a site or placement.
     /// Omission selects no project discussion; it is not a site fallback.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -125,6 +134,30 @@ pub struct Project {
     /// Explicit route through another publication, independent of lifecycle or deployment.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub available_through: Option<ProjectAvailability>,
+}
+
+/// Explicit publication facts for a code repository, separate from application credit.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ProjectSource {
+    /// Public repository document explaining the applicable software licence.
+    pub license_url: String,
+    /// Public citation file for the source code.
+    pub citation_url: String,
+    /// Author credited by that file.
+    pub author: Key,
+    /// Rights holder of this project's own source code.
+    pub rights_holder: Key,
+}
+
+/// One published research paper at an explicitly selected address.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct ResearchPaper {
+    /// Title on the paper.
+    pub name: String,
+    /// Public address that identifies this edition.
+    pub url: String,
 }
 
 /// The configured publication and page through which a gated project can be obtained.

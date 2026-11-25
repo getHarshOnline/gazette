@@ -37,7 +37,7 @@ impl SitePages<'_> {
             ))?;
         if configuration.coverage != LlmsCoverage::Curated {
             return Err(SitePagesError::Machine(
-                "all-pages llms coverage requires the complete generated page model",
+                "navigation and all-pages llms coverage require the generated page model",
             ));
         }
         let profile = self
@@ -263,7 +263,10 @@ impl SitePages<'_> {
                 title: page.node.title.clone(),
                 description: match configuration.coverage {
                     LlmsCoverage::AllPages => Some(required_description(page)?),
-                    LlmsCoverage::Curated => page
+                    LlmsCoverage::Navigation if page.node.id == configuration.description_from => {
+                        None
+                    }
+                    LlmsCoverage::Curated | LlmsCoverage::Navigation => page
                         .node
                         .description
                         .as_deref()
@@ -305,6 +308,41 @@ impl SitePages<'_> {
                             .collect::<Result<_, _>>()?,
                     });
                 }
+            }
+            LlmsCoverage::Navigation => {
+                if !configuration.sections.is_empty() {
+                    return Err(SitePagesError::Machine(
+                        "navigation llms coverage cannot declare curated sections",
+                    ));
+                }
+                let navigation = self
+                    .owner
+                    .compilation()
+                    .workspace
+                    .composition_for(&self.publication.site)
+                    .and_then(|composition| composition.navigation().cloned())
+                    .ok_or(SitePagesError::Machine(
+                        "navigation llms coverage requires publication navigation",
+                    ))?;
+                let mut seen = std::collections::BTreeSet::new();
+                let pages = navigation
+                    .value()
+                    .iter()
+                    .filter(|item| seen.insert(&item.destination))
+                    .map(|item| {
+                        self.curated_page(discovery, &item.destination)
+                            .and_then(entry)
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                if pages.is_empty() {
+                    return Err(SitePagesError::Machine(
+                        "navigation llms coverage requires at least one destination",
+                    ));
+                }
+                model.sections.push(LlmsReadingSection {
+                    title: "Start here".to_owned(),
+                    pages,
+                });
             }
             LlmsCoverage::AllPages => {
                 if !configuration.sections.is_empty() {

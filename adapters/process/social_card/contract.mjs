@@ -23,12 +23,13 @@ export function url(value, allowFragment = false) {
   return parsed;
 }
 export function validate(input) {
-  keys(input, ['version', 'request_sha256', 'html', 'initial_title', 'document_url', 'width', 'height', 'media_selector', 'media_kind', 'browser', 'limits', 'assets'], ['video_time_ms', 'image_variants']);
+  keys(input, ['version', 'request_sha256', 'html', 'initial_title', 'document_url', 'width', 'height', 'media_selector', 'media_kind', 'browser', 'limits', 'assets'], ['video_time_ms', 'image_variants', 'jpeg_quality']);
   requireThat(input.version === 1);
   digest(input.request_sha256);
   text(input.html, 8 << 20);
   text(input.initial_title, 1024);
   integer(input.width, 1, 4096); integer(input.height, 1, 4096);
+  if (Object.hasOwn(input, 'jpeg_quality')) integer(input.jpeg_quality, 1, 100);
   text(input.media_selector, 1024);
   requireThat(input.media_selector.trim() === input.media_selector && !controls.test(input.media_selector));
   requireThat(['image', 'video'].includes(input.media_kind));

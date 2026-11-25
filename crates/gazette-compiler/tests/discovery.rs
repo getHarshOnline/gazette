@@ -281,6 +281,41 @@ fn exact_taxonomy_pages_join_existing_machine_writers_without_authored_identitie
 }
 
 #[test]
+fn reading_guide_uses_navigation_order_and_authored_descriptions() {
+    let config = curated(
+        &configuration().replace(
+            "id='site:home'\npublisher",
+            "id='site:home'\ncomposition={navigation=[\
+             {label='Last',destination='content:last'},\
+             {label='First',destination='content:first'},\
+             {label='Again',destination='content:last'}]}\npublisher",
+        ),
+        "content:first",
+        &[],
+    )
+    .replace("sections=[]", "coverage='navigation'");
+    with_pages(&config, &files(), |pages, discovery| {
+        let guide = pages.llms_model(discovery, &[], &[], 1 << 20).unwrap();
+        assert!(guide.pages.is_empty());
+        assert_eq!(guide.sections.len(), 1);
+        let entries = &guide.sections[0].pages;
+        let ids = entries
+            .iter()
+            .map(|page| page.id.as_ref().unwrap().as_str())
+            .collect::<Vec<_>>();
+        assert_eq!(ids, ["content:last", "content:first"]);
+        assert_eq!(
+            entries[0].description.as_deref(),
+            Some("Declared description.")
+        );
+        assert_eq!(
+            entries[1].description, None,
+            "The introduction already uses this description."
+        );
+    });
+}
+
+#[test]
 fn machine_selection_is_explicit_site_local_and_strict() {
     for (setting, expected) in [
         ("", (false, false, false, false)),

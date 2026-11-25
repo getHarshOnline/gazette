@@ -304,7 +304,19 @@ impl<'a> Lowering<'a> {
                     self.budget.charge(url.len())?;
                     let title = attribute(source, "title").unwrap_or_default();
                     self.budget.charge(title.len())?;
-                    self.append(parent, NodeValue::Link(Box::new(NodeLink { url, title })))
+                    let link =
+                        self.append(parent, NodeValue::Link(Box::new(NodeLink { url, title })));
+                    self.children(source, link)?;
+                    if attribute(source, "data-gazette-destination-kind").as_deref()
+                        == Some("cross-site")
+                        && let Some(name) = attribute(source, "data-gazette-destination-site-name")
+                        && !name.trim().is_empty()
+                    {
+                        let context = format!(" (on {})", flow_text(&name));
+                        self.budget.charge(context.len())?;
+                        self.append(parent, NodeValue::Text(context.into()));
+                    }
+                    return Ok(());
                 } else {
                     parent
                 }
